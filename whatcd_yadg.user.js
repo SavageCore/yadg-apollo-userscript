@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.1
+// @version        0.0.2
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -163,24 +163,29 @@ $(document).ready(function(){
 		if (input.attr('value') == input_string || input.attr('value') == '') {
 			autoFillInput();
 		};
-		busyStart();
 		
-		GM_xmlhttpRequest({
-			method: "POST",
-			url: "http://yadg.dyndns.org/?xhr",
-			data: "input=" + encodeURIComponent(input.attr('value')),
-			headers: {
-				"Content-Type": "application/x-www-form-urlencoded"
-			},
-			onload: function(response) {
-				getResult(response.responseText);
-			},
-			onerror: function(response) {
-				div_response.text('Sorry, an error occured. Please try again.');
-				lastStateError = true;
-				busyStop();
-			}
-		});
+		var input_val = input.attr('value');
+		
+		if ( input_val != '' ) {
+			busyStart();
+			
+			GM_xmlhttpRequest({
+				method: "POST",
+				url: "http://yadg.dyndns.org/?xhr",
+				data: "input=" + encodeURIComponent(input_val),
+				headers: {
+					"Content-Type": "application/x-www-form-urlencoded"
+				},
+				onload: function(response) {
+					getResult(response.responseText);
+				},
+				onerror: function(response) {
+					div_response.text('Sorry, an error occured. Please try again.');
+					lastStateError = true;
+					busyStop();
+				}
+			});
+		}
 	};
 	
 	button.bind('click', makeRequest);
