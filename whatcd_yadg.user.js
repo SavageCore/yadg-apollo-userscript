@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.2
+// @version        0.0.3
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -56,6 +56,105 @@ $(document).ready(function(){
 		
 	var lastStateError = false;
 	
+	function fillFormValuesFromResponse(response) {
+		var data = jQuery.parseJSON(response.responseText)[1],
+			artist_inputs = $("input#artist"),
+			album_title_input = $("input#title"),
+			year_input = $("input#year"),
+			label_input = $("input#record_label"),
+			catalog_input = $("input#catalogue_number"),
+			tags_input = $("input#tags");
+		
+		var artists = false,
+			year = false,
+			title = false,
+			label = false,
+			catalog = false,
+			genre = false,
+			style = false;
+			tags = false;
+		
+		if (data.hasOwnProperty('artists')) {
+			artists = data.artists;
+		};
+		if (data.hasOwnProperty('released')) {
+			year = data.released.replace(/.*?(\d{4}).*?/,'$1');
+			if (year.length != 4) {
+				year = false;
+			};
+		};
+		if (data.hasOwnProperty('title')) {
+			title = data.title;
+		};
+		if (data.hasOwnProperty('label')) {
+			label = data.label[0];
+		};
+		if (data.hasOwnProperty('catalog')) {
+			catalog = data.catalog[0];
+		};
+		if (data.hasOwnProperty('genre')) {
+			genre = data.genre;
+		};
+		if (data.hasOwnProperty('style')) {
+			style = data.style;
+		};
+		if (genre != false && style != false) {
+			tags = data.genre.concat(data.style);
+		} else if (genre != false) {
+			tags = data.genre;
+		} else {
+			tags = data.style;
+		}
+		
+		if (tags != false) {
+			var tag_string = "";
+			
+			for (var i = 0; i < tags.length; i++) {
+				tag_string = tag_string + tags[i].replace(/\s+/g,'.');
+				if (i != tags.length-1) {
+					tag_string = tag_string + ', ';
+				};
+			};
+		};
+		
+		if (artists != false) {
+			var diff = artist_inputs.length - artists.length;
+			if (diff != 0) {
+				if (diff > 0) {
+					for (var i = 0; i < diff; i++) {
+						unsafeWindow.RemoveArtistField();
+					};
+				} else {
+					for (var i = 0; i < -diff; i++) {
+						unsafeWindow.AddArtistField();
+					};
+				};
+			};
+			
+			artist_inputs = $("input#artist");
+			
+			artist_inputs.each(function(index) {
+				$(this).attr('value',artists[index]);
+			});
+		};
+		
+		if (year != false) {
+			year_input.attr('value',year);
+		};
+		if (title != false) {
+			album_title_input.attr('value',title);
+		};
+		if (label != false) {
+			label_input.attr('value',label);
+		};
+		if (catalog != false) {
+			catalog_input.attr('value',catalog);
+		};
+		if (tags != false) {
+			tags_input.attr('value',tag_string.toLowerCase());
+		};
+	};
+	
 	function makeRequestByDiscogsId(e) {
 		e.preventDefault();
 		busyStart();
@@ -88,6 +187,13 @@ $(document).ready(function(){
 						div_response.empty();
 					};
 					lastStateError == false;
+					
+					GM_xmlhttpRequest({
+						method: "GET",
+						url: response.finalUrl + "&f=raw",
+						onload: fillFormValuesFromResponse
+					});
+					
 					busyStop();
 				} else if (data[0] == 'list') {
 					var ul = $('<ul id="yadg_release_list"></ul>');
