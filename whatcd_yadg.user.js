@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.5
+// @version        0.0.6
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -83,10 +83,12 @@ function fillFormValuesFromResponse(response) {
 	};
 	if (data.hasOwnProperty('discs')) {
 		for (var key in data.discs) {
-			for (var index in data.discs[key]) {
-				var track = data.discs[key][index];
-				if ( track[1] != null && !(track[1] in track_artists) ) {
-					track_artists[track[1]] = '';
+			for (var i in data.discs[key]) {
+				var track = data.discs[key][i];
+				for (var j in track[1]) {
+					if ( track[1][j] != null && !(track[1][j] in track_artists) ) {
+						track_artists[track[1][j]] = '';
+					};
 				};
 			};
 		};
