@@ -269,7 +269,7 @@ function getResult(id) {
 					};
 				};
 				
-				if (data[1].length != 0) {
+				if (ul.children().length != 0) {
 					div_response.empty();
 					div_response.append(ul);
 					lastStateError == false;
@@ -279,7 +279,7 @@ function getResult(id) {
 				}
 				busyStop();
 			} else if (data[0] == 'notfound') {
-				div_response.text('I could not find the release with the given ID on Discogs. You may want to try again with another one.');
+				div_response.text('I could not find the release with the given ID. You may want to try again with another one.');
 				lastStateError = true;
 				busyStop();
 			} else if (data[0] == 'waiting') {
