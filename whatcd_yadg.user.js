@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.7
+// @version        0.0.8
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -212,7 +212,13 @@ function makeRequestById(e) {
 		method: "GET",
 		url: $(this).attr('href') + "?xhr",
 		onload: function(response) {
-			getResult(response.responseText);
+			if (response.status == 200) {
+				getResult(response.responseText);
+			} else {
+				div_response.text('Sorry, an error occured. Please try again.');
+				lastStateError = true;
+				busyStop();
+			};
 		},
 		onerror: function(response) {
 			div_response.text('Sorry, an error occured. Please try again.');
@@ -337,7 +343,13 @@ function makeRequest(e) {
 				"Content-Type": "application/x-www-form-urlencoded"
 			},
 			onload: function(response) {
-				getResult(response.responseText);
+				if (response.status == 200) {
+					getResult(response.responseText);
+				} else {
+					div_response.text('Sorry, an error occured. Please try again.');
+					lastStateError = true;
+					busyStop();
+				};
 			},
 			onerror: function(response) {
 				div_response.text('Sorry, an error occured. Please try again.');
