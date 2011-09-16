@@ -2,29 +2,34 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.6
+// @version        0.0.7
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
 // ==/UserScript==
 
+var yadg_url = "http://yadg.dyndns.org";
 var album_desc = $("textarea#album_desc"),
 	tr_albumtitle = $("tr#title_tr"),
 	input = $('<input type="text" name="input" id="yadg_input" size="60" />'),
+	select = $('<select name="scraper" id="yadg_scraper"><option value="musicbrainz">Musicbrainz</option><option value="discogs" selected="selected">Discogs</option></select>'),
 	button = $('<input type="submit" value="Fetch" id="yadg_submit"/>'),
 	tr = $('<tr id="yadg_tr"></tr>'),
 	td_label = $('<td class="label">YADG:</td>'),
 	td_content = $('<td></td>'),
 	div_response = $('<div id="yadg_response"></div>');
 
-var input_string = "Enter discogs url, id or search term";
+var input_string = "Enter url or search term";
 
 td_content.append(input);
+td_content.append(select);
 td_content.append(button);
 td_content.append(div_response);
 tr.append(td_label);
 tr.append(td_content);
 tr_albumtitle.after(tr);
+
+select.css('margin-right','10px')
 
 input.css('margin-right','5px');
 input.attr('value',input_string);
@@ -71,7 +76,7 @@ function fillFormValuesFromResponse(response) {
 		label = false,
 		catalog = false,
 		genre = false,
-		style = false;
+		style = false,
 		tags = false;
 	
 	if (data.hasOwnProperty('artists')) {
@@ -108,7 +113,7 @@ function fillFormValuesFromResponse(response) {
 		};
 	};
 	if (data.hasOwnProperty('released')) {
-		year = data.released.replace(/.*?(\d{4}).*?/,'$1');
+		year = data.released.match(/\d{4}/)[0];
 		if (year.length != 4) {
 			year = false;
 		};
@@ -132,7 +137,7 @@ function fillFormValuesFromResponse(response) {
 		tags = data.genre.concat(data.style);
 	} else if (genre != false) {
 		tags = data.genre;
-	} else {
+	} else if (style != false) {
 		tags = data.style;
 	}
 	
@@ -172,6 +177,7 @@ function fillFormValuesFromResponse(response) {
 		});
 	};
 	
+	
 	if (year != false) {
 		year_input.attr('value',year);
 	} else {
@@ -199,12 +205,12 @@ function fillFormValuesFromResponse(response) {
 	};
 };
 
-function makeRequestByDiscogsId(e) {
+function makeRequestById(e) {
 	e.preventDefault();
 	busyStart();
 	GM_xmlhttpRequest({
 		method: "GET",
-		url: "http://yadg.dyndns.org/get/" + $(this).attr('id') + "?xhr",
+		url: $(this).attr('href') + "?xhr",
 		onload: function(response) {
 			getResult(response.responseText);
 		},
@@ -219,7 +225,7 @@ function makeRequestByDiscogsId(e) {
 function getResult(id) {
 	GM_xmlhttpRequest({
 		method: "GET",
-		url: "http://yadg.dyndns.org/result/" + id + "?xhr",
+		url: yadg_url + "/result/" + id + "?xhr",
 		onload: function(response) {
 			var data = jQuery.parseJSON(response.responseText);
 			
@@ -242,23 +248,26 @@ function getResult(id) {
 			} else if (data[0] == 'list') {
 				var ul = $('<ul id="yadg_release_list"></ul>');
 				
-				for (var i = 0; i < data[1].length;i++) {
-					var name = data[1][i]['name'],
-						info = data[1][i]['info'],
-						id = data[1][i]['release'];
-					
-					var li = $('<li></li>');
-					var a = $('<a href="#">'+name+'</a>');
-					a.attr('id',id);
-					a.bind('click', makeRequestByDiscogsId);
-					
-					li.css('margin-bottom','5px');
-					li.append(a);
-					li.append('<br />')
-					li.append(info);
-					
-					ul.append(li);
-				}
+				var scraper_results = data[1];
+				for (scraper in scraper_results) {
+					var release_list = scraper_results[scraper];
+					for (var i = 0; i < release_list.length;i++) {
+						var name = release_list[i]['name'],
+							info = release_list[i]['info'],
+							id = release_list[i]['release'];
+						
+						var li = $('<li></li>');
+						var a = $('<a href="' + yadg_url + '/get/' + scraper + '/' + id + '">'+name+'</a>');
+						a.bind('click', makeRequestById);
+						
+						li.css('margin-bottom','5px');
+						li.append(a);
+						li.append('<br />')
+						li.append(info);
+						
+						ul.append(li);
+					};
+				};
 				
 				if (data[1].length != 0) {
 					div_response.empty();
@@ -315,14 +324,15 @@ function makeRequest(e) {
 	};
 	
 	var input_val = input.attr('value');
+	var scraper_val = select.attr('value');
 	
 	if ( input_val != '' ) {
 		busyStart();
 		
 		GM_xmlhttpRequest({
 			method: "POST",
-			url: "http://yadg.dyndns.org/?xhr",
-			data: "input=" + encodeURIComponent(input_val),
+			url: yadg_url + "/?xhr",
+			data: "input=" + encodeURIComponent(input_val) + '&scraper=' + encodeURIComponent(scraper_val),
 			headers: {
 				"Content-Type": "application/x-www-form-urlencoded"
 			},
