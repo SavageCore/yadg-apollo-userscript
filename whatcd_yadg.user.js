@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.8
+// @version        0.0.9
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -12,7 +12,7 @@ var yadg_url = "http://yadg.dyndns.org";
 var album_desc = $("textarea#album_desc"),
 	tr_albumtitle = $("tr#title_tr"),
 	input = $('<input type="text" name="input" id="yadg_input" size="60" />'),
-	select = $('<select name="scraper" id="yadg_scraper"><option value="musicbrainz">Musicbrainz</option><option value="discogs" selected="selected">Discogs</option></select>'),
+	select = $('<select name="scraper" id="yadg_scraper"><option value="musicbrainz">Musicbrainz</option><option value="beatport">Beatport</option><option value="discogs" selected="selected">Discogs</option></select>'),
 	button = $('<input type="submit" value="Fetch" id="yadg_submit"/>'),
 	tr = $('<tr id="yadg_tr"></tr>'),
 	td_label = $('<td class="label">YADG:</td>'),
