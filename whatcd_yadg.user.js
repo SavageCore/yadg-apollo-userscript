@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.0.9
+// @version        0.0.10
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -48,6 +48,7 @@ input.bind('focusout', function(e) {
 
 function busyStart() {
 	input.attr('disabled',true);
+	select.attr('disabled',true);
 	button.attr('disabled',true);
 	button.attr('value','Please wait...');
 };
@@ -55,6 +56,7 @@ function busyStart() {
 function busyStop() {
 	button.attr('value','Fetch');
 	input.attr('disabled',false);
+	select.attr('disabled',false);
 	button.attr('disabled',false);
 };
 	
