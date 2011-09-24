@@ -2,13 +2,13 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
-// @version        0.1.0
+// @version        0.1.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
 // ==/UserScript==
 
-var yadg_url = "http://yadg.dyndns.org";
+var yadg_url = "http://yadg.cc";
 var album_desc = $("textarea#album_desc"),
 	tr_albumtitle = $("tr#title_tr"),
 	input = $('<input type="text" name="input" id="yadg_input" size="60" />'),
