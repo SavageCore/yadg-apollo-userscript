@@ -11,6 +11,7 @@
 var yadg_url = "http://yadg.cc";
 var album_desc = $("textarea#album_desc"),
 	tr_albumtitle = $("tr#title_tr"),
+	tr_artists = $("tr#artist_tr"),
 	input = $('<input type="text" name="input" id="yadg_input" size="60" />'),
 	select = $('<select name="scraper" id="yadg_scraper"><option value="beatport">Beatport</option><option value="discogs" selected="selected">Discogs</option><option value="metalarchives">Metal-Archives</option><option value="musicbrainz">Musicbrainz</option></select>'),
 	button = $('<input type="submit" value="Fetch" id="yadg_submit"/>'),
@@ -63,6 +64,11 @@ function busyStop() {
 var lastStateError = false;
 
 function fillFormValuesFromResponse(response) {
+	if (response.status != 200) {
+		$(window).scrollTop(tr_artists.position().top)
+		busyStop();
+		return null
+	};
 	var data = jQuery.parseJSON(response.responseText)[1],
 		artist_inputs = $("input#artist"),
 		album_title_input = $("input#title"),
@@ -205,6 +211,9 @@ function fillFormValuesFromResponse(response) {
 	} else {
 		tags_input.attr('value','');
 	};
+	
+	$(window).scrollTop(tr_artists.position().top)
+	busyStop();
 };
 
 function makeRequestById(e) {
@@ -239,8 +248,7 @@ function getResult(id) {
 			
 			if (data[0] == 'result') {
 				album_desc.text(data[1]);
-				var new_position = album_desc.offset();
-				window.scrollTo(new_position.left,new_position.top);
+				
 				if (lastStateError == true) {
 					div_response.empty();
 				};
@@ -249,10 +257,11 @@ function getResult(id) {
 				GM_xmlhttpRequest({
 					method: "GET",
 					url: response.finalUrl + "&f=raw",
-					onload: fillFormValuesFromResponse
+					onload: fillFormValuesFromResponse,
+					onerror: function(response) {
+						busyStop();
+					}
 				});
-				
-				busyStop();
 			} else if (data[0] == 'list') {
 				var ul = $('<ul id="yadg_release_list"></ul>');
 				
