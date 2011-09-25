@@ -65,7 +65,7 @@ var lastStateError = false;
 
 function fillFormValuesFromResponse(response) {
 	if (response.status != 200) {
-		$(window).scrollTop(tr_artists.position().top)
+		$(window).scrollTop(tr_artists.position().top);
 		busyStop();
 		return null
 	};
@@ -212,7 +212,7 @@ function fillFormValuesFromResponse(response) {
 		tags_input.attr('value','');
 	};
 	
-	$(window).scrollTop(tr_artists.position().top)
+	$(window).scrollTop(tr_artists.position().top);
 	busyStop();
 };
 
@@ -259,6 +259,7 @@ function getResult(id) {
 					url: response.finalUrl + "&f=raw",
 					onload: fillFormValuesFromResponse,
 					onerror: function(response) {
+						$(window).scrollTop(tr_artists.position().top);
 						busyStop();
 					}
 				});
