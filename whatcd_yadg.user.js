@@ -1,7 +1,7 @@
 // ==UserScript==
 // @id             what-yadg
 // @name           what.cd - YADG
-// @description    This script provides integration with online description generator YADG (http://yadg.dyndns.org)
+// @description    This script provides integration with online description generator YADG (http://yadg.cc)
 // @version        0.1.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
