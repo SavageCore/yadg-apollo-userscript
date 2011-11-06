@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.1.1
+// @version        0.1.2
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @require        https://ajax.googleapis.com/ajax/libs/jquery/1.6.3/jquery.js
@@ -78,7 +78,6 @@ function fillFormValuesFromResponse(response) {
 		tags_input = $("input#tags");
 	
 	var artists = false,
-		track_artists = {},
 		year = false,
 		title = false,
 		label = false,
@@ -88,35 +87,26 @@ function fillFormValuesFromResponse(response) {
 		tags = false;
 	
 	if (data.hasOwnProperty('artists')) {
-		artists = data.artists;
+		artists = {};
 		
-		//remove 'Various' from artists
-		var idx = artists.indexOf('Various');
-		if(idx!=-1) artists.splice(idx, 1);
+		for (var i in data.artists) {
+			var artist = data.artists[i];
+			if (artist["name"] != "Various") {
+				artists[artist["name"]] = artist["type"];
+			};
+		};
 	};
 	if (data.hasOwnProperty('discs')) {
 		for (var key in data.discs) {
 			for (var i in data.discs[key]) {
 				var track = data.discs[key][i];
 				for (var j in track[1]) {
-					if ( track[1][j] != null && !(track[1][j] in track_artists) ) {
-						track_artists[track[1][j]] = '';
+					var name = track[1][j]["name"],
+						type = track[1][j]["type"];
+					if ( !(name in artists) || (type == "Main" && artists[name] != "Main") ) {
+						artists[name] = type;
 					};
 				};
-			};
-		};
-		var artists_dict = {};
-		if (artists == false) {
-			artists = [];
-		}  else {
-			for (var index in artists) {
-				artists_dict[artists[index]] = '';
-			};
-		};
-		for (var artist in track_artists) {
-			if (!(artist in artists_dict)) {
-				artists.push(artist);
-				artists_dict[artist] = '';
 			};
 		};
 	};
@@ -161,7 +151,17 @@ function fillFormValuesFromResponse(response) {
 	};
 	
 	if (artists != false) {
-		var diff = artist_inputs.length - artists.length;
+		// count the artists
+		var artists_length = 0,
+			artist_keys = [];
+		for (var i in artists) {
+			if (artists.hasOwnProperty(i)) {
+				artists_length++;
+				artist_keys.push(i);
+			};
+		};
+		
+		var diff = artist_inputs.length - artists_length;
 		if (diff != 0) {
 			if (diff > 0) {
 				for (var i = 0; i < diff; i++) {
@@ -177,7 +177,16 @@ function fillFormValuesFromResponse(response) {
 		artist_inputs = $("input#artist");
 		
 		artist_inputs.each(function(index) {
-			$(this).attr('value',artists[index]);
+			var type_select = $(this).next();
+			$(this).attr('value',artist_keys[index]);
+			
+			if (artists[artist_keys[index]] == "Remixer") {
+				type_select.attr('value', 3);
+			} else if (artists[artist_keys[index]] == "Feature") {
+				type_select.attr('value', 2);
+			} else {
+				type_select.attr('value', 1);
+			};
 		});
 	} else {
 		artist_inputs.each(function(index) {
