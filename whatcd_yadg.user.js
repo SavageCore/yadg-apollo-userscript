@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.2.0
+// @version        0.2.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -233,7 +233,11 @@ var factory = {
 						
 						for (var i = 0; i < artist_inputs.length; i++) {
 							var artist_input = artist_inputs[i],
-							    type_select = artist_input.nextSibling.nextSibling;
+							    type_select = artist_input.nextSibling;
+							
+							while (type_select.tagName != 'SELECT') {
+								type_select = type_select.nextSibling;
+							};
 							
 							artist_input.value = data.artist_keys[i];
 							
@@ -281,7 +285,11 @@ var factory = {
 						
 						for (var i = 0; i < artist_inputs.length; i++) {
 							var artist_input = artist_inputs[i],
-							    type_select = artist_input.nextSibling.nextSibling;
+							    type_select = artist_input.nextSibling;
+							    
+							while (type_select.tagName != 'SELECT') {
+								type_select = type_select.nextSibling;
+							};
 							
 							artist_input.value = data.artist_keys[i];
 							
@@ -555,6 +563,10 @@ var yadg = {
 				};
 			};
 		};
+		
+		if (result.artists_length == 0) {
+			result.artists = false;
+		}
 		
 		return result;
 	}
