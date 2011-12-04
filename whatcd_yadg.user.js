@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.2.1
+// @version        0.2.2
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -144,7 +144,7 @@ var factory = {
 	getInputElements : function() {
 		var buttonHTML = '<input type="submit" value="Fetch" id="yadg_submit"/>',
 		    scraperSelectHTML = '<select name="yadg_scraper" id="yadg_scraper"><option value="beatport">Beatport</option><option value="discogs" selected="selected">Discogs</option><option value="metalarchives">Metal-Archives</option><option value="musicbrainz">Musicbrainz</option></select>',
-		    optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option selected="selected" value="whatcd">what.cd</option></select></div>',
+		    optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option selected="selected" value="whatcd">what.cd</option><option value="whatcd-tracks-only">what.cd (tracks only)</option></select></div>',
 		    inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />',
 		    responseDivHTML = '<div id="yadg_response"></div>',
 		    toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>';
