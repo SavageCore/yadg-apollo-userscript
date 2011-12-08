@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.2.2
+// @version        0.2.3
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -358,7 +358,7 @@ var yadg = {
 	getResult : function(id,format) {
 		var request = new requester('GET',this.baseURL + '/result/' + id + '?xhr&f=' + format, function(request,data) {
 			if (request.readyState==4 && request.status==200) {
-				var response = eval(request.responseText);
+				var response = JSON.parse(request.responseText);
 				
 				if (response[0] == 'result') {
 					factory.getDescriptionBox().value = response[1];
@@ -429,7 +429,7 @@ var yadg = {
 	fillFormValuesFromId : function(id) {
 		var request = new requester('GET',this.baseURL + '/result/' + id + '?xhr&f=raw', function(request,data) {
 			if (request.readyState==4 && request.status==200) {
-				var result = eval(request.responseText),
+				var result = JSON.parse(request.responseText),
 				    fillFunc = factory.getFormFillFunction();
 				fillFunc(result[1]);
 			};
