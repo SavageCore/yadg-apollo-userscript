@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.2.3
+// @version        0.2.4
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -267,7 +267,17 @@ var factory = {
 				return f;
 			
 			case "edit":
-				return function(rawData) {};
+				f = function(rawData) {
+					var year_input = document.getElementsByName("year")[0],
+					    label_input = document.getElementsByName("record_label")[0],
+					    catalog_input = document.getElementsByName("catalogue_number")[0],
+					    data = yadg.prepareRawResponse(rawData);
+					
+					util.setValueIfSet(data.year,year_input,data.year != false);
+					util.setValueIfSet(data.label,label_input,data.label != false);
+					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
+				};
+				return f;
 			
 			case "request":
 				var f = function(rawData) {
