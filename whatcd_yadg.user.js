@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.3.0
+// @version        0.3.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -415,11 +415,13 @@ var factory = {
 							var artist_string = "";
 							
 							for (var i = 0; i < data.artists_length; i++) {
-								artist_string = artist_string + data.artist_keys[i];
-								if (i < data.artists_length - 2) {
-									artist_string = artist_string + ", ";
-								} else if (i == data.artists_length - 2) {
-									artist_string = artist_string + " & ";
+								if (data.artists[data.artist_keys[i]] == "Main") {
+									if (artist_string != "" && i < data.artists_length - 1) {
+										artist_string = artist_string + ", ";
+									} else if (artist_string != "" && i == data.artists_length - 1) {
+										artist_string = artist_string + " & ";
+									}
+									artist_string = artist_string + data.artist_keys[i];
 								}
 							}
 
@@ -452,11 +454,13 @@ var factory = {
 							var artist_string = "";
 							
 							for (var i = 0; i < data.artists_length; i++) {
-								artist_string = artist_string + data.artist_keys[i];
-								if (i < data.artists_length - 2) {
-									artist_string = artist_string + ", ";
-								} else if (i == data.artists_length - 2) {
-									artist_string = artist_string + " & ";
+								if (data.artists[data.artist_keys[i]] == "Main") {
+									if (artist_string != "" && i < data.artists_length - 1) {
+										artist_string = artist_string + ", ";
+									} else if (artist_string != "" && i == data.artists_length - 1) {
+										artist_string = artist_string + " & ";
+									}
+									artist_string = artist_string + data.artist_keys[i];
 								}
 							}
 
