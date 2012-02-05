@@ -2,11 +2,13 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.2.4
+// @version        0.3.0
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
 // @include        http*://*what.cd/torrents.php*
+// @include        http*://*waffles.fm/upload.php*
+// @include        http*://*waffles.fm/requests.php*
 // ==/UserScript==
 
 
@@ -85,16 +87,24 @@ function requester(method, url, callback) {
 var factory = {
 	locations : new Array(
 		{
-			name : 'upload',
+			name : 'whatcd_upload',
 			regex : /http(s)?\:\/\/(.*\.)?what\.cd\/upload\.php.*/i
 		},
 		{
-			name : 'edit',
+			name : 'whatcd_edit',
 			regex : /http(s)?\:\/\/(.*\.)?what\.cd\/torrents\.php\?action=editgroup&groupid=.*/i
 		},
 		{
-			name : 'request',
+			name : 'whatcd_request',
 			regex : /http(s)?\:\/\/(.*\.)?what\.cd\/requests\.php\?action=new/i
+		},
+		{
+			name : 'waffles_upload',
+			regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php.*/i
+		},
+		{
+			name : 'waffles_request',
+			regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/requests\.php\?do=add/i
 		}
 	),
 	
@@ -132,6 +142,24 @@ var factory = {
 				optionsDiv.style.display = 'none';
 			};
 		});
+		
+		// set the correct default format
+		var format_select = document.getElementById('yadg_format');
+		var format_offsets = util.getOptionOffsets(format_select);
+		
+		switch(this.currentLocation) {
+			case "waffles_upload":
+				format_select.selectedIndex = format_offsets["wafflesfm"];
+				break;
+			
+			case "waffles_request":
+				format_select.selectedIndex = format_offsets["wafflesfm"];
+				break;
+			
+			default:
+				format_select.selectedIndex = format_offsets["whatcd"];
+				break;
+		}
 	},
 	
 	setStyles : function() {
@@ -139,34 +167,59 @@ var factory = {
 		util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,select#yadg_scraper,input#yadg_submit,label#yadg_format_label { margin-right: 5px } div#yadg_response { margin-top:3px; }');
 		
 		// location specific styles will go here
+		switch(this.currentLocation) {
+			case "waffles_upload":
+				util.addCSS('div#yadg_response ul { margin-left: 0 !important; padding-left: 0 !important; }');
+				break;
+			
+			case "waffles_request":
+				util.addCSS('div#yadg_response ul { margin-left: 0 !important; padding-left: 0 !important; }');
+				break;
+			
+			default:
+
+				break;
+		}
 	},
 	
 	getInputElements : function() {
 		var buttonHTML = '<input type="submit" value="Fetch" id="yadg_submit"/>',
 		    scraperSelectHTML = '<select name="yadg_scraper" id="yadg_scraper"><option value="beatport">Beatport</option><option value="discogs" selected="selected">Discogs</option><option value="metalarchives">Metal-Archives</option><option value="musicbrainz">Musicbrainz</option></select>',
-		    optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option selected="selected" value="whatcd">what.cd</option><option value="whatcd-tracks-only">what.cd (tracks only)</option></select></div>',
+		    optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option value="wafflesfm">waffles.fm</option><option value="wafflesfm-tracks-only">waffles.fm (tracks only)</option><option value="whatcd" selected="selected">what.cd</option><option value="whatcd-tracks-only">what.cd (tracks only)</option></select></div>',
 		    inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />',
 		    responseDivHTML = '<div id="yadg_response"></div>',
 		    toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>';
 		
 		
 		switch (this.currentLocation) {
-			case "upload":
+			case "whatcd_upload":
 				var tr = document.createElement('tr');
 				tr.className = "yadg_tr";
 				tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
 				return tr;
 			
-			case "edit":
+			case "whatcd_edit":
 				var div = document.createElement('div');
 				div.className = "yadg_div";
 				div.innerHTML = '<h3 class="label">YADG</h3>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML;
 				return div;
 			
-			case "request":
+			case "whatcd_request":
 				var tr = document.createElement('tr');
 				tr.className = "yadg_tr";
 				tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
+				return tr;
+			
+			case "waffles_upload":
+				var tr = document.createElement('tr');
+				tr.className = "yadg_tr";
+				tr.innerHTML = '<td class="heading" valign="top" align="right"><label for="yadg_input">YADG:</label></td><td>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
+				return tr;
+			
+			case "waffles_request":
+				var tr = document.createElement('tr');
+				tr.className = "yadg_tr";
+				tr.innerHTML = '<td style="text-align:left;width:100px;">YADG:</td><td style="text-align:left;">' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
 				return tr;
 			
 			default:
@@ -177,19 +230,29 @@ var factory = {
 	
 	insertIntoPage : function(element) {
 		switch (this.currentLocation) {
-			case "upload":
+			case "whatcd_upload":
 				var year_tr = document.getElementById('year_tr');
 				year_tr.parentNode.insertBefore(element,year_tr);
 				break;
 			
-			case "edit":
+			case "whatcd_edit":
 				var summary_input = document.getElementsByName('summary')[0];
 				summary_input.parentNode.insertBefore(element,summary_input.nextSibling.nextSibling);
 				break;
 			
-			case "request":
+			case "whatcd_request":
 				var artist_tr = document.getElementById('artist_tr');
 				artist_tr.parentNode.insertBefore(element,artist_tr);
+				break;
+			
+			case "waffles_upload":
+				var submit_button = document.getElementsByName('submit')[0];
+				submit_button.parentNode.parentNode.parentNode.insertBefore(element,submit_button.parentNode.parentNode);
+				break;
+			
+			case "waffles_request":
+				var category_select = document.getElementsByName('category')[0];
+				category_select.parentNode.parentNode.parentNode.insertBefore(element,category_select.parentNode.parentNode);
 				break;
 			
 			default:
@@ -199,14 +262,20 @@ var factory = {
 	
 	getDescriptionBox : function() {
 		switch (this.currentLocation) {
-			case "upload":
+			case "whatcd_upload":
 				return document.getElementById('album_desc');
 			
-			case "edit":
+			case "whatcd_edit":
 				return document.getElementsByName('body')[0];
 			
-			case "request":
+			case "whatcd_request":
 				return document.getElementsByName('description')[0];
+				
+			case "waffles_upload":
+				return document.getElementById('descr');
+			
+			case "waffles_request":
+				return document.getElementsByName('information')[0];
 			
 			default:
 				// that should actually never happen
@@ -216,7 +285,7 @@ var factory = {
 	
 	getFormFillFunction : function() {
 		switch (this.currentLocation) {
-			case "upload":
+			case "whatcd_upload":
 				var f = function(rawData) {
 					var artist_inputs = document.getElementsByName("artists[]"),
 					    album_title_input = document.getElementById("title"),
@@ -266,7 +335,7 @@ var factory = {
 				};
 				return f;
 			
-			case "edit":
+			case "whatcd_edit":
 				f = function(rawData) {
 					var year_input = document.getElementsByName("year")[0],
 					    label_input = document.getElementsByName("record_label")[0],
@@ -279,7 +348,7 @@ var factory = {
 				};
 				return f;
 			
-			case "request":
+			case "whatcd_request":
 				var f = function(rawData) {
 					var artist_inputs = document.getElementsByName("artists[]"),
 					    album_title_input = document.getElementsByName("title")[0],
@@ -324,6 +393,81 @@ var factory = {
 					util.setValueIfSet(data.title,album_title_input,data.title != false);
 					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
 					util.setValueIfSet(data.tag_string.toLowerCase(),tags_input,data.tags != false);
+				};
+				return f;
+			
+			case "waffles_upload":
+				var f = function(rawData) {
+					var artist_input = document.getElementsByName("artist")[0],
+					    album_title_input = document.getElementsByName("album")[0],
+					    year_input = document.getElementsByName("year")[0],
+					    va_checkbox = document.getElementById("va"),
+					    tags_input = document.getElementById("tags"),
+					    data = yadg.prepareRawResponse(rawData);
+					
+					if (data.artists != false) {
+						if (data.is_various) {
+							artist_input.value = "";
+							va_checkbox.checked = true;
+						} else {
+							va_checkbox.checked = false;
+							
+							var artist_string = "";
+							
+							for (var i = 0; i < data.artists_length; i++) {
+								artist_string = artist_string + data.artist_keys[i];
+								if (i < data.artists_length - 2) {
+									artist_string = artist_string + ", ";
+								} else if (i == data.artists_length - 2) {
+									artist_string = artist_string + " & ";
+								}
+							}
+
+							artist_input.value = artist_string;
+						}
+					} else {
+						va_checkbox.checked = false;
+						artist_input.value = "";
+					};
+					
+					util.setValueIfSet(data.year,year_input,data.year != false);
+					util.setValueIfSet(data.title,album_title_input,data.title != false);
+					util.setValueIfSet(data.tag_string_nodots.toLowerCase(),tags_input,data.tags != false);
+					
+					util.exec(function() {formatName()});
+				};
+				return f;
+			
+			case "waffles_request":
+				var f = function(rawData) {
+					var artist_input = document.getElementsByName("artist")[0],
+					    album_title_input = document.getElementsByName("title")[0],
+					    year_input = document.getElementsByName("year")[0],
+					    data = yadg.prepareRawResponse(rawData);
+					
+					if (data.artists != false) {
+						if (data.is_various) {
+							artist_input.value = "Various Artists";
+						} else {
+							var artist_string = "";
+							
+							for (var i = 0; i < data.artists_length; i++) {
+								artist_string = artist_string + data.artist_keys[i];
+								if (i < data.artists_length - 2) {
+									artist_string = artist_string + ", ";
+								} else if (i == data.artists_length - 2) {
+									artist_string = artist_string + " & ";
+								}
+							}
+
+							artist_input.value = artist_string;
+						}
+					} else {
+						artist_input.value = "";
+					};
+					
+					util.setValueIfSet(data.year,year_input,data.year != false);
+					util.setValueIfSet(data.title,album_title_input,data.title != false);
 				};
 				return f;
 			
@@ -496,6 +640,7 @@ var yadg = {
 		result.genre = false;
 		result.style = false;
 		result.tags = false;
+		result.is_various = false;
 
 		if (rawData.hasOwnProperty('artists')) {
 			result.artists = {};
@@ -504,6 +649,8 @@ var yadg = {
 				var artist = rawData.artists[i];
 				if (artist["name"] != "Various") {
 					result.artists[artist["name"]] = artist["type"];
+				} else {
+					result.is_various = true;
 				};
 			};
 		};
@@ -552,11 +699,14 @@ var yadg = {
 		
 		if (result.tags != false) {
 			result.tag_string = "";
+			result.tag_string_nodots = "";
 			
 			for (var i = 0; i < result.tags.length; i++) {
 				result.tag_string = result.tag_string + result.tags[i].replace(/\s+/g,'.');
+				result.tag_string_nodots = result.tag_string_nodots + result.tags[i].replace(/\s+/g,' ');
 				if (i != result.tags.length-1) {
 					result.tag_string = result.tag_string + ', ';
+					result.tag_string_nodots = result.tag_string_nodots + ', ';
 				};
 			};
 		};
