@@ -587,7 +587,7 @@ var yadg = {
 		    inputValue = this.input.value,
 		    url = this.baseURL + 'query/?';
 		    
-		    url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper)
+		    url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper);
 		
 		var request = new requester(url, function(response_data,data) {
 			yadg.getResult(response_data.result_url,format);
