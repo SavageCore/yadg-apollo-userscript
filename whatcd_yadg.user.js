@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.3.1
+// @version        0.4.0
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -11,6 +11,42 @@
 // @include        http*://*waffles.fm/requests.php*
 // ==/UserScript==
 
+
+// Copyright (c) 2011, Patrick "p2k" Schneider, et al - https://github.com/p2k/GLaDOS-Enhancer-Plus/
+// This work is licensed under the Creative Commons Attribution 3.0 Unported License.
+// To view a copy of this license, visit http://creativecommons.org/licenses/by/3.0/
+var _runSandboxedJSONPCounterYADG = 0;
+var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_callback, jsonp) {
+	if (jsonp === undefined) // Optional name of the query field, defaults to "jsonp"
+		jsonp = "callback";
+	var serviceHatchId = "jsonp_hatch_" + _runSandboxedJSONPCounterYADG;
+	_runSandboxedJSONPCounterYADG++;
+	
+	var jsonpServiceHatch = document.createElement("div");
+	jsonpServiceHatch.setAttribute("id", serviceHatchId);
+	jsonpServiceHatch.setAttribute("style", "position:absolute;top:0;left:0;width:1px;height:1px;display:none;overflow:hidden");
+	document.body.appendChild(jsonpServiceHatch);
+	
+	var serviceHatchScript = document.createElement("script");
+	serviceHatchScript.setAttribute("type", "text/javascript");
+	serviceHatchScript.textContent = 'function ' + serviceHatchId + '_callback(data){document.getElementById("' + serviceHatchId + '").textContent=JSON.stringify(data);};';
+	document.body.appendChild(serviceHatchScript);
+	
+	var jsonpRunner = document.createElement("script");
+	jsonpRunner.setAttribute("type", "text/javascript");
+	jsonpRunner.setAttribute("src", url + "&" + jsonp + "=" + serviceHatchId + "_callback");
+	jsonpRunner.addEventListener("load", function() {
+		var data = jsonpServiceHatch.textContent;
+		callback(JSON.parse(data), additional_data);
+		document.body.removeChild(jsonpServiceHatch);
+		document.body.removeChild(serviceHatchScript);
+		document.body.removeChild(jsonpRunner);
+	}, false);
+	jsonpRunner.addEventListener("error", function() {
+		failed_callback();
+	}, false);
+	document.body.appendChild(jsonpRunner);
+}
 
 var util = {
 	exec : function exec(fn) {
@@ -64,23 +100,26 @@ var util = {
 };
 
 // very simple wrapper for XmlHttpRequest
-function requester(method, url, callback) {
-	var xmlhttp = new XMLHttpRequest(),
-	    data = {};
-	this.data = data;
+function requester(url, callback) {
+	this.data = {};
+	this.callback = callback
+	this.url = url;
 	
-	this.xmlhttp = xmlhttp;
-	this.xmlhttp.onreadystatechange = function() {
-		callback(xmlhttp,data);
+	if (url.charAt(url.length - 1) == "/") {
+		this.url += '?';
+	} else {
+		this.url += '&';
+	}
+	
+	this.url += 'format=json-p';
+	
+	var failed_callback = function() {
+		yadg.printError(yadg.standardError);
+		yadg.busyStop();
 	};
-	this.xmlhttp.open(method,url,true);
 	
-	if (method == 'POST') {
-		this.xmlhttp.setRequestHeader("Content-Type","application/x-www-form-urlencoded");
-	};
-	
-	this.send = function(data) {
-		this.xmlhttp.send(data);
+	this.send = function() {
+		runSandboxedJSONPYADG(this.url,callback,this.data,failed_callback);
 	};
 };
 
@@ -144,6 +183,14 @@ var factory = {
 		});
 		
 		// set the correct default format
+		factory.setDefaultFormat();
+		
+		// update the scraper and formats list
+		yadg.getScraperList(factory.setScraperSelect);
+		yadg.getFormatsList(factory.setFormatSelect);
+	},
+	
+	setDefaultFormat : function() {
 		var format_select = document.getElementById('yadg_format');
 		var format_offsets = util.getOptionOffsets(format_select);
 		
@@ -159,6 +206,28 @@ var factory = {
 			default:
 				format_select.selectedIndex = format_offsets["whatcd"];
 				break;
+		}
+	},
+	
+	setScraperSelect : function(response_data, data) {
+		var scraper_select = document.getElementById("yadg_scraper");
+		
+		factory.setSelect(scraper_select,response_data);
+	},
+	
+	setFormatSelect : function(response_data, data) {
+		var format_select = document.getElementById("yadg_format");
+		
+		factory.setSelect(format_select,response_data);
+		
+		factory.setDefaultFormat();
+	},
+	
+	setSelect : function(select, data) {
+		select.length = data.length;
+		
+		for (var i = 0; i < data.length; i++) {
+			select[i] = new Option(data[i].name, data[i].value, false, data[i].default);
 		}
 	},
 	
@@ -483,7 +552,7 @@ var factory = {
 };
 
 var yadg = {
-	baseURL : "http://yadg.cc",
+	baseURL : "http://yadg.cc/api/v1/",
 	
 	standardError : "Sorry, an error occured. Please try again.",
 	lastStateError : false,
@@ -496,55 +565,69 @@ var yadg = {
 		this.button = document.getElementById('yadg_submit');
 	},
 	
+	getScraperList : function(callback) {
+		var url = this.baseURL + "scrapers/";
+		
+		var request = new requester(url, callback);
+		
+		request.send();
+	},
+	
+	getFormatsList : function(callback) {
+		var url = this.baseURL + "formats/";
+		
+		var request = new requester(url, callback);
+		
+		request.send();
+	},
+	
 	makeRequest : function() {
 		var scraper = this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
 		    format = this.formatSelect.options[this.formatSelect.selectedIndex].value,
-		    inputValue = this.input.value;
+		    inputValue = this.input.value,
+		    url = this.baseURL + 'query/?';
+		    
+		    url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper)
 		
-		var request = new requester('POST',this.baseURL + '/?xhr', function(request,data) {
-			if (request.readyState==4 && request.status==200) {
-				yadg.getResult(request.responseText,format);
-			} else if (request.readyState==4 && request.status!=200) {
-				yadg.printError(yadg.standardError);
-				yadg.busyStop();
-			};
+		var request = new requester(url, function(response_data,data) {
+			yadg.getResult(response_data.result_url,format);
 		});
 		this.busyStart();
-		request.send('input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper));
+		request.send();
 	},
 	
-	getResult : function(id,format) {
-		var request = new requester('GET',this.baseURL + '/result/' + id + '?xhr&f=' + format, function(request,data) {
-			if (request.readyState==4 && request.status==200) {
-				var response = JSON.parse(request.responseText);
-				
-				if (response[0] == 'result') {
-					factory.getDescriptionBox().value = response[1];
+	getResult : function(result_url,format) {
+		var request = new requester(result_url + '?include_raw_data=True&description_format=' + encodeURIComponent(format), function(response_data,data) {
+			var response = response_data;
+			
+			if (response.status == "done") {
+				if (response.type == 'release') {
+					factory.getDescriptionBox().value = response.description;
 					
 					if (yadg.lastStateError == true) {
 						yadg.responseDiv.innerHTML = "";
 						yadg.lastStateError == false;
 					};
 					
-					yadg.fillFormValuesFromId(data.id);
-					
-				} else if (response[0] == 'list') {
+					fillFunc = factory.getFormFillFunction();
+					fillFunc(response.raw_data);
+				} else if (response.type == 'release_list') {
 					var ul = document.createElement('ul');
 					ul.id = "yadg_release_list";
 					
-					var scraper_results = response[1];
+					var scraper_results = response.releases;
 					for (scraper in scraper_results) {
 						var release_list = scraper_results[scraper];
 						for (var i = 0; i < release_list.length;i++) {
 							var name = release_list[i]['name'],
 								info = release_list[i]['info'],
-								id = release_list[i]['release'];
+								query_url = release_list[i]['query_url'];
 							
 							var li = document.createElement('li'),
 							    a = document.createElement('a');
 							
 							a.textContent = name;
-							a.href = yadg.baseURL + '/get/' + scraper + '/' + id;
+							a.href = query_url;
 							
 							a.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequestByUrl(this.href);},false);
 							
@@ -563,49 +646,27 @@ var yadg = {
 					} else {
 						yadg.printError('Sorry, there were no matches.');
 					}
-					yadg.busyStop();
-				} else if (response[0] == 'notfound') {
+				} else if (response.type == 'release_not_found') {
 					yadg.printError('I could not find the release with the given ID. You may want to try again with another one.');
-					yadg.busyStop();
-				} else if (response[0] == 'waiting') {
-					var delay = function() { yadg.getResult(data.id,data.format); };
-					window.setTimeout(delay, 1000);
 				} else {
 					yadg.printError('Something weird happened. Please try again');
-					yadg.busyStop();
 				}
-			} else if (request.readyState==4 && request.status!=200) {
-				yadg.printError(yadg.standardError);
 				yadg.busyStop();
-			};
+			} else  {
+				var delay = function() { yadg.getResult(data.result_url,data.format); };
+				window.setTimeout(delay, 1000);
+			}
 		});
-		request.data.id = id;
+		request.data.result_url = result_url;
 		request.data.format = format;
-		request.send();
-	},
-	
-	fillFormValuesFromId : function(id) {
-		var request = new requester('GET',this.baseURL + '/result/' + id + '?xhr&f=raw', function(request,data) {
-			if (request.readyState==4 && request.status==200) {
-				var result = JSON.parse(request.responseText),
-				    fillFunc = factory.getFormFillFunction();
-				fillFunc(result[1]);
-			};
-			yadg.busyStop();
-		});
 		request.send();
 	},
 	
 	makeRequestByUrl : function(url) {
 		var format = this.formatSelect.options[this.formatSelect.selectedIndex].value;
-		
-		var request = new requester('GET',url + '?xhr', function(request,data) {
-			if (request.readyState==4 && request.status==200) {
-				yadg.getResult(request.responseText,format);
-			} else if (request.readyState==4 && request.status!=200) {
-				yadg.printError(yadg.standardError);
-				yadg.busyStop();
-			};
+
+		var request = new requester(url, function(response_data,data) {
+			yadg.getResult(response_data.result_url,format);
 		});
 		this.busyStart();
 		request.send();
