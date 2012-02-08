@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.0
+// @version        0.4.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -503,7 +503,10 @@ var factory = {
 					
 					util.setValueIfSet(data.year,year_input,data.year != false);
 					util.setValueIfSet(data.title,album_title_input,data.title != false);
-					util.setValueIfSet(data.tag_string_nodots.toLowerCase(),tags_input,data.tags != false);
+					
+					if (data.tags != false) {
+						tags_input.value = data.tag_string_nodots.toLowerCase();
+					};
 					
 					util.exec(function() {formatName()});
 				};
