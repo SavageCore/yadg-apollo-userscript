@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.1
+// @version        0.4.2
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -10,6 +10,18 @@
 // @include        http*://*waffles.fm/upload.php*
 // @include        http*://*waffles.fm/requests.php*
 // ==/UserScript==
+
+
+// --------- USER SETTINGS START ---------
+
+/*
+ Here you can set site specific default formats.
+ You can find a list of available formats at: http://yadg.cc/api/v1/formats/
+*/
+var defaultWhatFormat = "whatcd",
+    defaultWafflesFormat = "wafflesfm";
+
+// --------- USER SETTINGS START ---------
 
 
 // Copyright (c) 2011, Patrick "p2k" Schneider, et al - https://github.com/p2k/GLaDOS-Enhancer-Plus/
@@ -193,18 +205,18 @@ var factory = {
 	setDefaultFormat : function() {
 		var format_select = document.getElementById('yadg_format');
 		var format_offsets = util.getOptionOffsets(format_select);
-		
+
 		switch(this.currentLocation) {
 			case "waffles_upload":
-				format_select.selectedIndex = format_offsets["wafflesfm"];
+				format_select.selectedIndex = format_offsets[defaultWafflesFormat];
 				break;
 			
 			case "waffles_request":
-				format_select.selectedIndex = format_offsets["wafflesfm"];
+				format_select.selectedIndex = format_offsets[defaultWafflesFormat];
 				break;
 			
 			default:
-				format_select.selectedIndex = format_offsets["whatcd"];
+				format_select.selectedIndex = format_offsets[defaultWhatFormat];
 				break;
 		}
 	},
@@ -219,7 +231,6 @@ var factory = {
 		var format_select = document.getElementById("yadg_format");
 		
 		factory.setSelect(format_select,response_data);
-		
 		factory.setDefaultFormat();
 	},
 	
@@ -227,7 +238,10 @@ var factory = {
 		select.length = data.length;
 		
 		for (var i = 0; i < data.length; i++) {
-			select[i] = new Option(data[i].name, data[i].value, false, data[i].default);
+			select[i] = new Option(data[i].name, data[i].value, false, data[i]['default']);
+			if (data[i]['default']) {
+				select.selectedIndex = i;
+			}
 		}
 	},
 	
@@ -422,6 +436,7 @@ var factory = {
 					var artist_inputs = document.getElementsByName("artists[]"),
 					    album_title_input = document.getElementsByName("title")[0],
 					    year_input = document.getElementsByName("year")[0],
+					    label_input = document.getElementsByName("recordlabel")[0],
 					    catalog_input = document.getElementsByName("cataloguenumber")[0],
 					    tags_input = document.getElementById("tags"),
 					    data = yadg.prepareRawResponse(rawData);
@@ -460,6 +475,7 @@ var factory = {
 					
 					util.setValueIfSet(data.year,year_input,data.year != false);
 					util.setValueIfSet(data.title,album_title_input,data.title != false);
+					util.setValueIfSet(data.label,label_input,data.label != false);
 					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
 					util.setValueIfSet(data.tag_string.toLowerCase(),tags_input,data.tags != false);
 				};
