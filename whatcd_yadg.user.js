@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.2
+// @version        0.4.3
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -56,6 +56,9 @@ var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_cal
 	}, false);
 	jsonpRunner.addEventListener("error", function() {
 		failed_callback();
+		document.body.removeChild(jsonpServiceHatch);
+		document.body.removeChild(serviceHatchScript);
+		document.body.removeChild(jsonpRunner);
 	}, false);
 	document.body.appendChild(jsonpRunner);
 }
