@@ -128,13 +128,8 @@ function requester(url, callback) {
 	
 	this.url += 'format=json-p';
 	
-	var failed_callback = function() {
-		yadg.printError(yadg.standardError);
-		yadg.busyStop();
-	};
-	
 	this.send = function() {
-		runSandboxedJSONPYADG(this.url,callback,this.data,failed_callback);
+		runSandboxedJSONPYADG(this.url,callback,this.data,yadg.failed_callback);
 	};
 };
 
@@ -674,6 +669,8 @@ var yadg = {
 					yadg.printError('Something weird happened. Please try again');
 				}
 				yadg.busyStop();
+			} else if (response.status == 'failed') {
+				yadg.failed_callback();
 			} else  {
 				var delay = function() { yadg.getResult(data.result_url,data.format); };
 				window.setTimeout(delay, 1000);
@@ -698,6 +695,11 @@ var yadg = {
 		this.responseDiv.innerHTML = "";
 		this.responseDiv.appendChild(document.createTextNode(message));
 		this.lastStateError = true;
+	},
+	
+	failed_callback : function() {
+		yadg.printError(yadg.standardError);
+		yadg.busyStop();
 	},
 	
 	busyStart : function() {
