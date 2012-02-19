@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.3
+// @version        0.4.4
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -21,8 +21,11 @@
 var defaultWhatFormat = "whatcd",
     defaultWafflesFormat = "wafflesfm";
 
-// --------- USER SETTINGS START ---------
+// --------- USER SETTINGS END ---------
 
+
+
+// --------- THIRD PARTY CODE AREA START ---------
 
 // Copyright (c) 2011, Patrick "p2k" Schneider, et al - https://github.com/p2k/GLaDOS-Enhancer-Plus/
 // This work is licensed under the Creative Commons Attribution 3.0 Unported License.
@@ -31,7 +34,7 @@ var _runSandboxedJSONPCounterYADG = 0;
 var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_callback, jsonp) {
 	if (jsonp === undefined) // Optional name of the query field, defaults to "jsonp"
 		jsonp = "callback";
-	var serviceHatchId = "jsonp_hatch_" + _runSandboxedJSONPCounterYADG;
+	var serviceHatchId = "YADG_jsonp_hatch_" + _runSandboxedJSONPCounterYADG;
 	_runSandboxedJSONPCounterYADG++;
 	
 	var jsonpServiceHatch = document.createElement("div");
@@ -62,6 +65,8 @@ var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_cal
 	}, false);
 	document.body.appendChild(jsonpRunner);
 }
+
+// --------- THIRD PARTY CODE AREA END ---------
 
 var util = {
 	exec : function exec(fn) {
