@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.4
+// @version        0.4.5
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -576,7 +576,7 @@ var factory = {
 var yadg = {
 	baseURL : "http://yadg.cc/api/v1/",
 	
-	standardError : "Sorry, an error occured. Please try again.",
+	standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
 	lastStateError : false,
 	
 	init : function() {
