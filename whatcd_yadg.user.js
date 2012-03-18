@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.5
+// @version        0.4.6
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -412,12 +412,16 @@ var factory = {
 						};
 					};
 					
+					if (data.tags != false) {
+						tags_input.value = data.tag_string.toLowerCase();
+					} else {
+						tags_input.value = '';
+					};
 					
 					util.setValueIfSet(data.year,year_input,data.year != false);
 					util.setValueIfSet(data.title,album_title_input,data.title != false);
 					util.setValueIfSet(data.label,label_input,data.label != false);
 					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
-					util.setValueIfSet(data.tag_string.toLowerCase(),tags_input,data.tags != false);
 				};
 				return f;
 			
@@ -475,12 +479,16 @@ var factory = {
 						};
 					};
 					
+					if (data.tags != false) {
+						tags_input.value = data.tag_string.toLowerCase();
+					} else {
+						tags_input.value = '';
+					};
 					
 					util.setValueIfSet(data.year,year_input,data.year != false);
 					util.setValueIfSet(data.title,album_title_input,data.title != false);
 					util.setValueIfSet(data.label,label_input,data.label != false);
 					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
-					util.setValueIfSet(data.tag_string.toLowerCase(),tags_input,data.tags != false);
 				};
 				return f;
 			
@@ -525,6 +533,8 @@ var factory = {
 					
 					if (data.tags != false) {
 						tags_input.value = data.tag_string_nodots.toLowerCase();
+					} else {
+						tags_input.value = '';
 					};
 					
 					util.exec(function() {formatName()});
