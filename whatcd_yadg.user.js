@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.6
+// @version        0.4.7
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -68,7 +68,7 @@ var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_cal
 
 // --------- THIRD PARTY CODE AREA END ---------
 
-var util = {
+var yadg_util = {
 	exec : function exec(fn) {
 		var script = document.createElement('script');
 		script.setAttribute("type", "application/javascript");
@@ -100,11 +100,11 @@ var util = {
 		if (count != 0) {
 			if (count < 0) {
 				for (var i = 0; i < -count; i++) {
-					util.exec(function() {RemoveArtistField()});
+					yadg_util.exec(function() {RemoveArtistField()});
 				};
 			} else {
 				for (var i = 0; i < count; i++) {
-					util.exec(function() {AddArtistField()});
+					yadg_util.exec(function() {AddArtistField()});
 				};
 			};
 		};
@@ -207,7 +207,7 @@ var factory = {
 	
 	setDefaultFormat : function() {
 		var format_select = document.getElementById('yadg_format');
-		var format_offsets = util.getOptionOffsets(format_select);
+		var format_offsets = yadg_util.getOptionOffsets(format_select);
 
 		switch(this.currentLocation) {
 			case "waffles_upload":
@@ -250,16 +250,16 @@ var factory = {
 	
 	setStyles : function() {
 		// general styles
-		util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,select#yadg_scraper,input#yadg_submit,label#yadg_format_label { margin-right: 5px } div#yadg_response { margin-top:3px; }');
+		yadg_util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,select#yadg_scraper,input#yadg_submit,label#yadg_format_label { margin-right: 5px } div#yadg_response { margin-top:3px; }');
 		
 		// location specific styles will go here
 		switch(this.currentLocation) {
 			case "waffles_upload":
-				util.addCSS('div#yadg_response ul { margin-left: 0 !important; padding-left: 0 !important; }');
+				yadg_util.addCSS('div#yadg_response ul { margin-left: 0 !important; padding-left: 0 !important; }');
 				break;
 			
 			case "waffles_request":
-				util.addCSS('div#yadg_response ul { margin-left: 0 !important; padding-left: 0 !important; }');
+				yadg_util.addCSS('div#yadg_response ul { margin-left: 0 !important; padding-left: 0 !important; }');
 				break;
 			
 			default:
@@ -382,7 +382,7 @@ var factory = {
 					    data = yadg.prepareRawResponse(rawData);
 					
 					if (data.artists != false) {
-						util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
+						yadg_util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
 						
 						artist_inputs = document.getElementsByName("artists[]");
 						
@@ -396,7 +396,7 @@ var factory = {
 							
 							artist_input.value = data.artist_keys[i];
 							
-							option_offsets = util.getOptionOffsets(type_select);
+							option_offsets = yadg_util.getOptionOffsets(type_select);
 							
 							if (data.artists[data.artist_keys[i]] == "Remixer") {
 								type_select.selectedIndex = option_offsets[3];
@@ -418,10 +418,10 @@ var factory = {
 						tags_input.value = '';
 					};
 					
-					util.setValueIfSet(data.year,year_input,data.year != false);
-					util.setValueIfSet(data.title,album_title_input,data.title != false);
-					util.setValueIfSet(data.label,label_input,data.label != false);
-					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
+					yadg_util.setValueIfSet(data.year,year_input,data.year != false);
+					yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
+					yadg_util.setValueIfSet(data.label,label_input,data.label != false);
+					yadg_util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
 				};
 				return f;
 			
@@ -432,9 +432,9 @@ var factory = {
 					    catalog_input = document.getElementsByName("catalogue_number")[0],
 					    data = yadg.prepareRawResponse(rawData);
 					
-					util.setValueIfSet(data.year,year_input,data.year != false);
-					util.setValueIfSet(data.label,label_input,data.label != false);
-					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
+					yadg_util.setValueIfSet(data.year,year_input,data.year != false);
+					yadg_util.setValueIfSet(data.label,label_input,data.label != false);
+					yadg_util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
 				};
 				return f;
 			
@@ -449,7 +449,7 @@ var factory = {
 					    data = yadg.prepareRawResponse(rawData);
 					
 					if (data.artists != false) {
-						util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
+						yadg_util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
 						
 						artist_inputs = document.getElementsByName("artists[]");
 						
@@ -463,7 +463,7 @@ var factory = {
 							
 							artist_input.value = data.artist_keys[i];
 							
-							option_offsets = util.getOptionOffsets(type_select);
+							option_offsets = yadg_util.getOptionOffsets(type_select);
 							
 							if (data.artists[data.artist_keys[i]] == "Remixer") {
 								type_select.selectedIndex = option_offsets[3];
@@ -485,10 +485,10 @@ var factory = {
 						tags_input.value = '';
 					};
 					
-					util.setValueIfSet(data.year,year_input,data.year != false);
-					util.setValueIfSet(data.title,album_title_input,data.title != false);
-					util.setValueIfSet(data.label,label_input,data.label != false);
-					util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
+					yadg_util.setValueIfSet(data.year,year_input,data.year != false);
+					yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
+					yadg_util.setValueIfSet(data.label,label_input,data.label != false);
+					yadg_util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
 				};
 				return f;
 			
@@ -528,8 +528,8 @@ var factory = {
 						artist_input.value = "";
 					};
 					
-					util.setValueIfSet(data.year,year_input,data.year != false);
-					util.setValueIfSet(data.title,album_title_input,data.title != false);
+					yadg_util.setValueIfSet(data.year,year_input,data.year != false);
+					yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
 					
 					if (data.tags != false) {
 						tags_input.value = data.tag_string_nodots.toLowerCase();
@@ -537,7 +537,7 @@ var factory = {
 						tags_input.value = '';
 					};
 					
-					util.exec(function() {formatName()});
+					yadg_util.exec(function() {formatName()});
 				};
 				return f;
 			
@@ -571,8 +571,8 @@ var factory = {
 						artist_input.value = "";
 					};
 					
-					util.setValueIfSet(data.year,year_input,data.year != false);
-					util.setValueIfSet(data.title,album_title_input,data.title != false);
+					yadg_util.setValueIfSet(data.year,year_input,data.year != false);
+					yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
 				};
 				return f;
 			
