@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.7
+// @version        0.4.8
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -621,11 +621,13 @@ var yadg = {
 		    
 		    url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper);
 		
-		var request = new requester(url, function(response_data,data) {
-			yadg.getResult(response_data.result_url,format);
-		});
-		this.busyStart();
-		request.send();
+		if (inputValue != '') {
+			var request = new requester(url, function(response_data,data) {
+				yadg.getResult(response_data.result_url,format);
+			});
+			this.busyStart();
+			request.send();
+		}
 	},
 	
 	getResult : function(result_url,format) {
