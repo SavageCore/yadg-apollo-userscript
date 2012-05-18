@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.9
+// @version        0.4.8
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -588,7 +588,6 @@ var yadg = {
 	
 	standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
 	lastStateError : false,
-    busy : false,
 	
 	init : function() {
 		this.scraperSelect = document.getElementById('yadg_scraper');
@@ -615,22 +614,20 @@ var yadg = {
 	},
 	
 	makeRequest : function() {
-        if (!yadg.busy) {
-            var scraper = this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
-                format = this.formatSelect.options[this.formatSelect.selectedIndex].value,
-                inputValue = this.input.value,
-                url = this.baseURL + 'query/?';
-
-                url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper);
-
-            if (inputValue != '') {
-                var request = new requester(url, function(response_data,data) {
-                    yadg.getResult(response_data.result_url,format);
-                });
-                this.busyStart();
-                request.send();
-            }
-        }
+		var scraper = this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
+		    format = this.formatSelect.options[this.formatSelect.selectedIndex].value,
+		    inputValue = this.input.value,
+		    url = this.baseURL + 'query/?';
+		    
+		    url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper);
+		
+		if (inputValue != '') {
+			var request = new requester(url, function(response_data,data) {
+				yadg.getResult(response_data.result_url,format);
+			});
+			this.busyStart();
+			request.send();
+		}
 	},
 	
 	getResult : function(result_url,format) {
@@ -702,15 +699,13 @@ var yadg = {
 	},
 	
 	makeRequestByUrl : function(url) {
-        if (!yadg.busy) {
-            var format = this.formatSelect.options[this.formatSelect.selectedIndex].value;
+		var format = this.formatSelect.options[this.formatSelect.selectedIndex].value;
 
-            var request = new requester(url, function(response_data,data) {
-                yadg.getResult(response_data.result_url,format);
-            });
-            this.busyStart();
-            request.send();
-        }
+		var request = new requester(url, function(response_data,data) {
+			yadg.getResult(response_data.result_url,format);
+		});
+		this.busyStart();
+		request.send();
 	},
 	
 	printError : function(message) {
@@ -730,7 +725,6 @@ var yadg = {
 		this.input.setAttribute('disabled',true);
 		this.scraperSelect.setAttribute('disabled',true);
 		this.formatSelect.setAttribute('disabled',true);
-        this.busy = true;
 	},
 	
 	busyStop : function() {
@@ -739,7 +733,6 @@ var yadg = {
 		this.input.removeAttribute('disabled');
 		this.scraperSelect.removeAttribute('disabled');
 		this.formatSelect.removeAttribute('disabled');
-        this.busy = false;
 	},
 	
 	prepareRawResponse : function(rawData) {
