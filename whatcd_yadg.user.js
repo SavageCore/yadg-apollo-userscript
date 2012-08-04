@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.4.8
+// @version        0.5.0
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -161,6 +161,10 @@ var factory = {
 			regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/requests\.php\?do=add/i
 		}
 	),
+
+    determineSSL : function(uri) {
+        return uri.indexOf("https://") == 0
+    },
 	
 	determineLocation : function(uri) {
 		for (var i = 0; i < this.locations.length; i++) {
@@ -173,6 +177,7 @@ var factory = {
 	
 	init : function() {
 		this.currentLocation = this.determineLocation(document.URL);
+        this.isSSL = this.determineSSL(document.URL);
 		this.insertIntoPage(this.getInputElements());
 		
 		// set the necessary styles
@@ -199,7 +204,9 @@ var factory = {
 		
 		// set the correct default format
 		factory.setDefaultFormat();
-		
+
+        // tell the yadg object if we are browsing the site using ssl
+        yadg.setSSL(this.isSSL);
 		// update the scraper and formats list
 		yadg.getScraperList(factory.setScraperSelect);
 		yadg.getFormatsList(factory.setFormatSelect);
@@ -585,10 +592,17 @@ var factory = {
 
 var yadg = {
 	baseURL : "http://yadg.cc/api/v1/",
+    baseURLSSL : "https://yadg.cc/api/v1/",
 	
 	standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
 	lastStateError : false,
-	
+
+    isSSL : false,
+
+    setSSL : function(isSSL) {
+        this.isSSL = isSSL;
+    },
+
 	init : function() {
 		this.scraperSelect = document.getElementById('yadg_scraper');
 		this.formatSelect = document.getElementById('yadg_format');
@@ -596,9 +610,16 @@ var yadg = {
 		this.responseDiv = document.getElementById('yadg_response');
 		this.button = document.getElementById('yadg_submit');
 	},
-	
+
+    getBaseURL : function() {
+        if (this.isSSL) {
+            return this.baseURLSSL;
+        }
+        return this.baseURL;
+    },
+
 	getScraperList : function(callback) {
-		var url = this.baseURL + "scrapers/";
+		var url = this.getBaseURL() + "scrapers/";
 		
 		var request = new requester(url, callback);
 		
@@ -606,7 +627,7 @@ var yadg = {
 	},
 	
 	getFormatsList : function(callback) {
-		var url = this.baseURL + "formats/";
+		var url = this.getBaseURL() + "formats/";
 		
 		var request = new requester(url, callback);
 		
@@ -617,7 +638,7 @@ var yadg = {
 		var scraper = this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
 		    format = this.formatSelect.options[this.formatSelect.selectedIndex].value,
 		    inputValue = this.input.value,
-		    url = this.baseURL + 'query/?';
+		    url = this.getBaseURL() + 'query/?';
 		    
 		    url += 'input=' + encodeURIComponent(inputValue) + '&scraper=' + encodeURIComponent(scraper);
 		
