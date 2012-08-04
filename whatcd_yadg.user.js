@@ -64,7 +64,7 @@ var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_cal
         document.body.removeChild(jsonpRunner);
     }, false);
     document.body.appendChild(jsonpRunner);
-}
+};
 
 // --------- THIRD PARTY CODE AREA END ---------
 
@@ -92,7 +92,7 @@ var yadg_util = {
             input.value = value;
         } else {
             input.value = '';
-        };
+        }
     },
     
     // negative count will remove, positive count will add given number of artist boxes
@@ -101,13 +101,13 @@ var yadg_util = {
             if (count < 0) {
                 for (var i = 0; i < -count; i++) {
                     yadg_util.exec(function() {RemoveArtistField()});
-                };
+                }
             } else {
                 for (var i = 0; i < count; i++) {
                     yadg_util.exec(function() {AddArtistField()});
-                };
-            };
-        };
+                }
+            }
+        }
     },
     
     getOptionOffsets : function(select) {
@@ -122,7 +122,7 @@ var yadg_util = {
 // very simple wrapper for XmlHttpRequest
 function requester(url, callback) {
     this.data = {};
-    this.callback = callback
+    this.callback = callback;
     this.url = url;
     
     if (url.charAt(url.length - 1) == "/") {
@@ -136,7 +136,7 @@ function requester(url, callback) {
     this.send = function() {
         runSandboxedJSONPYADG(this.url,callback,this.data,yadg.failed_callback);
     };
-};
+}
 
 var factory = {
     locations : new Array(
@@ -199,7 +199,7 @@ var factory = {
                 optionsDiv.style.display = 'block';
             } else {
                 optionsDiv.style.display = 'none';
-            };
+            }
         });
         
         // set the correct default format
@@ -399,7 +399,7 @@ var factory = {
                             
                             while (type_select.tagName != 'SELECT') {
                                 type_select = type_select.nextSibling;
-                            };
+                            }
                             
                             artist_input.value = data.artist_keys[i];
                             
@@ -411,19 +411,19 @@ var factory = {
                                 type_select.selectedIndex = option_offsets[2];
                             } else {
                                 type_select.selectedIndex = option_offsets[1];
-                            };
-                        };
+                            }
+                        }
                     } else {
                         for (var i = 0; i < artist_inputs.length; i++) {
                             artist_inputs[i].value = '';
-                        };
-                    };
+                        }
+                    }
                     
                     if (data.tags != false) {
                         tags_input.value = data.tag_string.toLowerCase();
                     } else {
                         tags_input.value = '';
-                    };
+                    }
                     
                     yadg_util.setValueIfSet(data.year,year_input,data.year != false);
                     yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
@@ -466,7 +466,7 @@ var factory = {
                                 
                             while (type_select.tagName != 'SELECT') {
                                 type_select = type_select.nextSibling;
-                            };
+                            }
                             
                             artist_input.value = data.artist_keys[i];
                             
@@ -478,19 +478,19 @@ var factory = {
                                 type_select.selectedIndex = option_offsets[2];
                             } else {
                                 type_select.selectedIndex = option_offsets[1];
-                            };
-                        };
+                            }
+                        }
                     } else {
                         for (var i = 0; i < artist_inputs.length; i++) {
                             artist_inputs[i].value = '';
-                        };
-                    };
+                        }
+                    }
                     
                     if (data.tags != false) {
                         tags_input.value = data.tag_string.toLowerCase();
                     } else {
                         tags_input.value = '';
-                    };
+                    }
                     
                     yadg_util.setValueIfSet(data.year,year_input,data.year != false);
                     yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
@@ -533,7 +533,7 @@ var factory = {
                     } else {
                         va_checkbox.checked = false;
                         artist_input.value = "";
-                    };
+                    }
                     
                     yadg_util.setValueIfSet(data.year,year_input,data.year != false);
                     yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
@@ -542,7 +542,7 @@ var factory = {
                         tags_input.value = data.tag_string_nodots.toLowerCase();
                     } else {
                         tags_input.value = '';
-                    };
+                    }
                     
                     yadg_util.exec(function() {formatName()});
                 };
@@ -576,7 +576,7 @@ var factory = {
                         }
                     } else {
                         artist_input.value = "";
-                    };
+                    }
                     
                     yadg_util.setValueIfSet(data.year,year_input,data.year != false);
                     yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
@@ -661,8 +661,8 @@ var yadg = {
                     
                     if (yadg.lastStateError == true) {
                         yadg.responseDiv.innerHTML = "";
-                        yadg.lastStateError == false;
-                    };
+                        yadg.lastStateError = false;
+                    }
                     
                     fillFunc = factory.getFormFillFunction();
                     fillFunc(response.raw_data);
@@ -691,13 +691,13 @@ var yadg = {
                             li.appendChild(document.createTextNode(info));
                             
                             ul.appendChild(li);
-                        };
-                    };
+                        }
+                    }
                     
                     if (ul.childNodes.length != 0) {
                         yadg.responseDiv.innerHTML = "";
                         yadg.responseDiv.appendChild(ul);
-                        yadg.lastStateError == false;
+                        yadg.lastStateError = false;
                     } else {
                         yadg.printError('Sorry, there were no matches.');
                     }
@@ -778,9 +778,9 @@ var yadg = {
                     result.artists[artist["name"]] = artist["type"];
                 } else {
                     result.is_various = true;
-                };
-            };
-        };
+                }
+            }
+        }
         if (rawData.hasOwnProperty('discs')) {
             for (var key in rawData.discs) {
                 for (var i in rawData.discs[key]) {
@@ -790,32 +790,32 @@ var yadg = {
                             type = track[1][j]["type"];
                         if ( !(name in result.artists) || (type == "Main" && result.artists[name] != "Main") ) {
                             result.artists[name] = type;
-                        };
-                    };
-                };
-            };
-        };
+                        }
+                    }
+                }
+            }
+        }
         if (rawData.hasOwnProperty('released')) {
             result.year = rawData.released.match(/\d{4}/)[0];
             if (result.year.length != 4) {
                 result.year = false;
-            };
-        };
+            }
+        }
         if (rawData.hasOwnProperty('title')) {
             result.title = rawData.title;
-        };
+        }
         if (rawData.hasOwnProperty('label')) {
             result.label = rawData.label[0];
-        };
+        }
         if (rawData.hasOwnProperty('catalog')) {
             result.catalog = rawData.catalog[0];
-        };
+        }
         if (rawData.hasOwnProperty('genre')) {
             result.genre = rawData.genre;
-        };
+        }
         if (rawData.hasOwnProperty('style')) {
             result.style = rawData.style;
-        };
+        }
         if (result.genre != false && result.style != false) {
             result.tags = rawData.genre.concat(rawData.style);
         } else if (result.genre != false) {
@@ -834,9 +834,9 @@ var yadg = {
                 if (i != result.tags.length-1) {
                     result.tag_string = result.tag_string + ', ';
                     result.tag_string_nodots = result.tag_string_nodots + ', ';
-                };
-            };
-        };
+                }
+            }
+        }
         
         if (result.artists != false) {
             // count the artists
@@ -847,9 +847,9 @@ var yadg = {
                 if (result.artists.hasOwnProperty(i)) {
                     result.artists_length++;
                     result.artist_keys.push(i);
-                };
-            };
-        };
+                }
+            }
+        }
         
         if (result.artists_length == 0) {
             result.artists = false;
