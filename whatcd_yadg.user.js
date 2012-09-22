@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.5.0
+// @version        0.5.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -598,6 +598,7 @@ var yadg = {
     lastStateError : false,
 
     isSSL : false,
+    isBusy : false,
 
     setSSL : function(isSSL) {
         this.isSSL = isSSL;
@@ -635,6 +636,7 @@ var yadg = {
     },
     
     makeRequest : function() {
+        if (this.isBusy) return;
         var scraper = this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
             format = this.formatSelect.options[this.formatSelect.selectedIndex].value,
             inputValue = this.input.value,
@@ -720,6 +722,7 @@ var yadg = {
     },
     
     makeRequestByUrl : function(url) {
+        if (this.isBusy) return;
         var format = this.formatSelect.options[this.formatSelect.selectedIndex].value;
 
         var request = new requester(url, function(response_data,data) {
@@ -741,6 +744,7 @@ var yadg = {
     },
     
     busyStart : function() {
+        this.isBusy = true;
         this.button.setAttribute('disabled',true);
         this.button.value = "Please wait...";
         this.input.setAttribute('disabled',true);
@@ -754,6 +758,7 @@ var yadg = {
         this.input.removeAttribute('disabled');
         this.scraperSelect.removeAttribute('disabled');
         this.formatSelect.removeAttribute('disabled');
+        this.isBusy = false;
     },
     
     prepareRawResponse : function(rawData) {
