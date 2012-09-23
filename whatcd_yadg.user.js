@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.5.1
+// @version        0.5.2
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -678,15 +678,17 @@ var yadg = {
                         for (var i = 0; i < release_list.length;i++) {
                             var name = release_list[i]['name'],
                                 info = release_list[i]['info'],
-                                query_url = release_list[i]['query_url'];
+                                query_url = release_list[i]['query_url'],
+                                release_url = release_list[i]['release_url'];
                             
                             var li = document.createElement('li'),
                                 a = document.createElement('a');
                             
                             a.textContent = name;
-                            a.href = query_url;
+                            a.setAttribute('data-query-url', query_url);
+                            a.href = release_url;
                             
-                            a.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequestByUrl(this.href);},false);
+                            a.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequestByUrl(this.getAttribute('data-query-url'));},false);
                             
                             li.appendChild(a);
                             li.appendChild(document.createElement('br'));
