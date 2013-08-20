@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.5.2
+// @version        0.5.3
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -257,7 +257,7 @@ var factory = {
     
     setStyles : function() {
         // general styles
-        yadg_util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,select#yadg_scraper,input#yadg_submit,label#yadg_format_label { margin-right: 5px } div#yadg_response { margin-top:3px; }');
+        yadg_util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,input#yadg_submit,label#yadg_format_label,a#yadg_scraper_info { margin-right: 5px } div#yadg_response { margin-top:3px; } select#yadg_scraper { margin-right: 2px }');
         
         // location specific styles will go here
         switch(this.currentLocation) {
@@ -281,38 +281,39 @@ var factory = {
             optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option value="wafflesfm">waffles.fm</option><option value="wafflesfm-tracks-only">waffles.fm (tracks only)</option><option value="whatcd" selected="selected">what.cd</option><option value="whatcd-tracks-only">what.cd (tracks only)</option></select></div>',
             inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />',
             responseDivHTML = '<div id="yadg_response"></div>',
-            toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>';
+            toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>',
+            scraperInfoLink = '<a id="yadg_scraper_info" href="https://yadg.cc/available-scrapers" target="_blank" title="Get additional information on the available scrapers">[?]</a>';
         
         
         switch (this.currentLocation) {
             case "whatcd_upload":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
-                tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
+                tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
             
             case "whatcd_edit":
                 var div = document.createElement('div');
                 div.className = "yadg_div";
-                div.innerHTML = '<h3 class="label">YADG</h3>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML;
+                div.innerHTML = '<h3 class="label">YADG</h3>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML;
                 return div;
             
             case "whatcd_request":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
-                tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
+                tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
             
             case "waffles_upload":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
-                tr.innerHTML = '<td class="heading" valign="top" align="right"><label for="yadg_input">YADG:</label></td><td>' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
+                tr.innerHTML = '<td class="heading" valign="top" align="right"><label for="yadg_input">YADG:</label></td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
             
             case "waffles_request":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
-                tr.innerHTML = '<td style="text-align:left;width:100px;">YADG:</td><td style="text-align:left;">' + inputHTML + scraperSelectHTML + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
+                tr.innerHTML = '<td style="text-align:left;width:100px;">YADG:</td><td style="text-align:left;">' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
             
             default:
