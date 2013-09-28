@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.5.3
+// @version        0.5.4
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -243,12 +243,18 @@ var factory = {
         factory.setSelect(format_select,response_data);
         factory.setDefaultFormat();
     },
-    
+
     setSelect : function(select, data) {
-        select.length = data.length;
-        
+        select.options.length = data.length;
+
         for (var i = 0; i < data.length; i++) {
-            select[i] = new Option(data[i].name, data[i].value, false, data[i]['default']);
+            // we are not using the javascript constructor to create an Option instance because this will create an
+            // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on What.cd
+            var o = document.createElement("option");
+            o.text = data[i]['name'];
+            o.value = data[i]['value'];
+            o.selected = data[i]['default'];
+            select.options[i] = o;
             if (data[i]['default']) {
                 select.selectedIndex = i;
             }
