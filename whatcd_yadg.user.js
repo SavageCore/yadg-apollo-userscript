@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.5.4
+// @version        0.6.0
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -153,6 +153,10 @@ var factory = {
             regex : /http(s)?\:\/\/(.*\.)?what\.cd\/requests\.php\?action=new/i
         },
         {
+            name : 'whatcd_torrent_overview',
+            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/torrents\.php\?id=.*/i
+        },
+        {
             name : 'waffles_upload',
             regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php.*/i
         },
@@ -189,18 +193,20 @@ var factory = {
         
         // add the action for the options toggle
         var toggleLink = document.getElementById('yadg_toggle_options');
-        toggleLink.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            var optionsDiv = document.getElementById('yadg_options'),
-                display = optionsDiv.style.display;
-            
-            if (display == 'none' || display == '') {
-                optionsDiv.style.display = 'block';
-            } else {
-                optionsDiv.style.display = 'none';
-            }
-        });
+        if (toggleLink != null) {
+            toggleLink.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                var optionsDiv = document.getElementById('yadg_options'),
+                    display = optionsDiv.style.display;
+
+                if (display == 'none' || display == '') {
+                    optionsDiv.style.display = 'block';
+                } else {
+                    optionsDiv.style.display = 'none';
+                }
+            });
+        }
         
         // set the correct default format
         factory.setDefaultFormat();
@@ -303,6 +309,12 @@ var factory = {
                 div.className = "yadg_div";
                 div.innerHTML = '<h3 class="label">YADG</h3>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML;
                 return div;
+
+            case "whatcd_torrent_overview":
+                var div = document.createElement('div');
+                div.className = "yadg_div";
+                div.innerHTML = '<h3 class="label">YADG</h3>' + '<input type="text" name="yadg_input" id="yadg_input" />' + scraperSelectHTML + scraperInfoLink + buttonHTML + optionsHTML + responseDivHTML;
+                return div;
             
             case "whatcd_request":
                 var tr = document.createElement('tr');
@@ -339,6 +351,11 @@ var factory = {
                 var summary_input = document.getElementsByName('summary')[0];
                 summary_input.parentNode.insertBefore(element,summary_input.nextSibling.nextSibling);
                 break;
+
+            case "whatcd_torrent_overview":
+                var add_artists_box = document.getElementsByClassName("box_addartists")[0];
+                add_artists_box.appendChild(element);
+                break;
             
             case "whatcd_request":
                 var artist_tr = document.getElementById('artist_tr');
@@ -367,6 +384,12 @@ var factory = {
             
             case "whatcd_edit":
                 return document.getElementsByName('body')[0];
+
+            case "whatcd_torrent_overview":
+                if (!this.hasOwnProperty("dummybox")) {
+                    this.dummybox = document.createElement('div');
+                }
+                return this.dummybox;
             
             case "whatcd_request":
                 return document.getElementsByName('description')[0];
@@ -449,6 +472,44 @@ var factory = {
                     yadg_util.setValueIfSet(data.year,year_input,data.year != false);
                     yadg_util.setValueIfSet(data.label,label_input,data.label != false);
                     yadg_util.setValueIfSet(data.catalog,catalog_input,data.catalog != false);
+                };
+                return f;
+
+            case "whatcd_torrent_overview":
+                f = function(rawData) {
+                    var artist_inputs = document.getElementsByName("aliasname[]"),
+                        data = yadg.prepareRawResponse(rawData);
+
+                    if (data.artists != false) {
+                        yadg_util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
+
+                        artist_inputs = document.getElementsByName("aliasname[]");
+
+                        for (var i = 0; i < artist_inputs.length; i++) {
+                            var artist_input = artist_inputs[i],
+                                type_select = artist_input.nextSibling;
+
+                            while (type_select.tagName != 'SELECT') {
+                                type_select = type_select.nextSibling;
+                            }
+
+                            artist_input.value = data.artist_keys[i];
+
+                            option_offsets = yadg_util.getOptionOffsets(type_select);
+
+                            if (data.artists[data.artist_keys[i]] == "Remixer") {
+                                type_select.selectedIndex = option_offsets[3];
+                            } else if (data.artists[data.artist_keys[i]] == "Feature") {
+                                type_select.selectedIndex = option_offsets[2];
+                            } else {
+                                type_select.selectedIndex = option_offsets[1];
+                            }
+                        }
+                    } else {
+                        for (var i = 0; i < artist_inputs.length; i++) {
+                            artist_inputs[i].value = '';
+                        }
+                    }
                 };
                 return f;
             
