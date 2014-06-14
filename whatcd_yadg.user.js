@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.6.0
+// @version        0.7.0
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -66,6 +66,165 @@ var runSandboxedJSONPYADG = function (url, callback, additional_data, failed_cal
     document.body.appendChild(jsonpRunner);
 };
 
+//
+// Creates an object which gives some helper methods to
+// Save/Load/Remove data to/from the localStorage
+//
+// Source from: https://github.com/gergob/localstoragewrapper
+//
+function LocalStorageWrapper (applicationPrefix) {
+    "use strict";
+
+    if(applicationPrefix == undefined) {
+        throw new Error('applicationPrefix parameter should be defined');
+    }
+
+    var delimiter = '_';
+
+    //if the passed in value for prefix is not string, it should be converted
+    var keyPrefix = typeof(applicationPrefix) === 'string' ? applicationPrefix : JSON.stringify(applicationPrefix);
+
+    var localStorage = window.localStorage||unsafeWindow.localStorage;
+
+    var isLocalStorageAvailable = function() {
+        return typeof(localStorage) != undefined
+    }
+
+    var getKeyPrefix = function() {
+        return keyPrefix;
+    }
+
+    //
+    // validates if there is a prefix defined for the keys
+    // and checks if the localStorage functionality is available or not
+    //
+    var makeChecks = function(key) {
+        var prefix = getKeyPrefix();
+        if(prefix == undefined) {
+            throw new Error('No prefix was defined, data cannot be saved');
+        }
+
+        if(!isLocalStorageAvailable()) {
+            throw new Error('LocalStorage is not supported by your browser, data cannot be saved');
+        }
+
+        //keys are always strings
+        var checkedKey = typeof(key) === 'string' ? key : JSON.stringify(key);
+
+        return checkedKey;
+    }
+
+    //
+    // saves the value associated to the key into the localStorage
+    //
+    var addItem = function(key, value) {
+        var that = this;
+        try{
+            var checkedKey = makeChecks(key);
+            var combinedKey = that.getKeyPrefix() + delimiter + checkedKey;
+            localStorage.setItem(combinedKey, JSON.stringify(value));
+        }
+        catch(error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    //
+    // gets the value of the object saved to the key passed as parameter
+    //
+    var getItem = function(key) {
+        var that = this;
+        var result = undefined;
+        try{
+            var checkedKey = makeChecks(key);
+            var combinedKey = that.getKeyPrefix() + delimiter + checkedKey;
+            var resultAsJSON = localStorage.getItem(combinedKey);
+            result = JSON.parse(resultAsJSON);
+        }
+        catch(error) {
+            console.log(error);
+            throw error;
+        }
+        return result;
+    }
+
+    //
+    // returns all the keys from the localStorage
+    //
+    var getAllKeys = function() {
+        var prefix = getKeyPrefix();
+        var results = [];
+
+        if(prefix == undefined) {
+            throw new Error('No prefix was defined, data cannot be saved');
+        }
+
+        if(!isLocalStorageAvailable()) {
+            throw new Error('LocalStorage is not supported by your browser, data cannot be saved');
+        }
+
+        for(var key in localStorage) {
+            if(key.indexOf(prefix) == 0) {
+                var keyParts = key.split(delimiter);
+                results.push(keyParts[1]);
+            }
+        }
+
+        return results;
+    }
+
+    //
+    // removes the value associated to the key from the localStorage
+    //
+    var removeItem = function(key) {
+        var that = this;
+        var result = false;
+        try{
+            var checkedKey = makeChecks(key);
+            var combinedKey = that.getKeyPrefix() + delimiter + checkedKey;
+            localStorage.removeItem(combinedKey);
+            result = true;
+        }
+        catch(error) {
+            console.log(error);
+            throw error;
+        }
+        return result;
+    }
+
+    //
+    // removes all the values from the localStorage
+    //
+    var removeAll = function() {
+        var that = this;
+
+        try{
+            var allKeys = that.getAllKeys();
+            for(var i=0; i < allKeys.length; ++i) {
+                var checkedKey = makeChecks(allKeys[i]);
+                var combinedKey = that.getKeyPrefix() + delimiter + checkedKey;
+                localStorage.removeItem(combinedKey);
+            }
+        }
+        catch(error) {
+            console.log(error);
+            throw error;
+        }
+    }
+
+    // make some of the functionalities public
+    return {
+        isLocalStorageAvailable : isLocalStorageAvailable,
+        getKeyPrefix : getKeyPrefix,
+        addItem : addItem,
+        getItem : getItem,
+        getAllKeys : getAllKeys,
+        removeItem : removeItem,
+        removeAll : removeAll
+    }
+};
+
 // --------- THIRD PARTY CODE AREA END ---------
 
 var yadg_util = {
@@ -116,7 +275,9 @@ var yadg_util = {
             option_offsets[select.options[j].value] = select.options[j].index;
         }
         return option_offsets;
-    }
+    },
+
+    storage : new LocalStorageWrapper("yadg")
 };
 
 // very simple wrapper for XmlHttpRequest
@@ -139,6 +300,14 @@ function requester(url, callback) {
 }
 
 var factory = {
+    KEY_LAST_CHECKED : "lastChecked",
+    KEY_SCRAPER_LIST : "scraperList",
+    KEY_FORMAT_LIST : "formatList",
+
+    CACHE_TIMEOUT : 1000*60*60*24, // 24 hours
+
+    UPDATE_PROGRESS : 0,
+
     locations : new Array(
         {
             name : 'whatcd_upload',
@@ -193,7 +362,7 @@ var factory = {
         
         // add the action for the options toggle
         var toggleLink = document.getElementById('yadg_toggle_options');
-        if (toggleLink != null) {
+        if (toggleLink !== null) {
             toggleLink.addEventListener('click', function(e) {
                 e.preventDefault();
 
@@ -207,15 +376,35 @@ var factory = {
                 }
             });
         }
+
+        // add the action to the clear cache link
+        var clearCacheLink = document.getElementById('yadg_clear_cache');
+        if (clearCacheLink !== null) {
+            clearCacheLink.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                yadg_util.storage.removeAll();
+
+                alert("Cache cleared. Please reload the page for this to take effect.");
+            });
+        }
         
         // set the correct default format
         factory.setDefaultFormat();
 
         // tell the yadg object if we are browsing the site using ssl
         yadg.setSSL(this.isSSL);
-        // update the scraper and formats list
-        yadg.getScraperList(factory.setScraperSelect);
-        yadg.getFormatsList(factory.setFormatSelect);
+
+        var last_checked = yadg_util.storage.getItem(factory.KEY_LAST_CHECKED);
+        if (last_checked === null || (new Date()).getTime() - (new Date(last_checked)).getTime() > factory.CACHE_TIMEOUT) {
+            // update the scraper and formats list
+            factory.UPDATE_PROGRESS = 1;
+            yadg.getScraperList(factory.setScraperSelect);
+            yadg.getFormatsList(factory.setFormatSelect);
+        } else {
+            factory.setScraperSelect(yadg_util.storage.getItem(factory.KEY_SCRAPER_LIST));
+            factory.setFormatSelect(yadg_util.storage.getItem(factory.KEY_FORMAT_LIST));
+        }
     },
     
     setDefaultFormat : function() {
@@ -241,6 +430,15 @@ var factory = {
         var scraper_select = document.getElementById("yadg_scraper");
         
         factory.setSelect(scraper_select,response_data);
+
+        if (factory.UPDATE_PROGRESS > 0) {
+            yadg_util.storage.addItem(factory.KEY_SCRAPER_LIST, response_data);
+            factory.UPDATE_PROGRESS |= 1<<1;
+
+            if (factory.UPDATE_PROGRESS === 7) {
+                yadg_util.storage.addItem(factory.KEY_LAST_CHECKED, new Date());
+            }
+        }
     },
     
     setFormatSelect : function(response_data, data) {
@@ -248,6 +446,15 @@ var factory = {
         
         factory.setSelect(format_select,response_data);
         factory.setDefaultFormat();
+
+        if (factory.UPDATE_PROGRESS > 0) {
+            yadg_util.storage.addItem(factory.KEY_FORMAT_LIST, response_data);
+            factory.UPDATE_PROGRESS |= 1<<2;
+
+            if (factory.UPDATE_PROGRESS === 7) {
+                yadg_util.storage.addItem(factory.KEY_LAST_CHECKED, new Date());
+            }
+        }
     },
 
     setSelect : function(select, data) {
@@ -290,7 +497,7 @@ var factory = {
     getInputElements : function() {
         var buttonHTML = '<input type="submit" value="Fetch" id="yadg_submit"/>',
             scraperSelectHTML = '<select name="yadg_scraper" id="yadg_scraper"><option value="beatport">Beatport</option><option value="discogs" selected="selected">Discogs</option><option value="metalarchives">Metal-Archives</option><option value="musicbrainz">Musicbrainz</option></select>',
-            optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option value="wafflesfm">waffles.fm</option><option value="wafflesfm-tracks-only">waffles.fm (tracks only)</option><option value="whatcd" selected="selected">what.cd</option><option value="whatcd-tracks-only">what.cd (tracks only)</option></select></div>',
+            optionsHTML = '<div id="yadg_options"><label for="yadg_format" id="yadg_format_label">Format:</label><select name="yadg_format" id="yadg_format"><option value="plain">plain</option><option value="wafflesfm">waffles.fm</option><option value="wafflesfm-tracks-only">waffles.fm (tracks only)</option><option value="whatcd" selected="selected">what.cd</option><option value="whatcd-tracks-only">what.cd (tracks only)</option></select> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div>',
             inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />',
             responseDivHTML = '<div id="yadg_response"></div>',
             toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>',
