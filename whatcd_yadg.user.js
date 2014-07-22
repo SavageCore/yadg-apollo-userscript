@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.7.0
+// @version        0.7.1
 // @namespace      yadg
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
@@ -18,7 +18,7 @@
  Here you can set site specific default formats.
  You can find a list of available formats at: http://yadg.cc/api/v1/formats/
 */
-var defaultWhatFormat = "whatcd",
+var defaultWhatFormat = "whatcd-tracks-only",
     defaultWafflesFormat = "wafflesfm";
 
 // --------- USER SETTINGS END ---------
