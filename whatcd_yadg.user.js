@@ -245,7 +245,6 @@ var yadg_util = {
 // very simple wrapper for XmlHttpRequest
 function requester(url, method, callback, data) {
     this.data = {};
-    this.callback = callback;
     this.url = url;
     this.method = method;
 
@@ -253,7 +252,13 @@ function requester(url, method, callback, data) {
         details = {
             url : this.url,
             method : this.method,
-            onload : this.callback,
+            onload : function(response) {
+                if (response.status === 200) {
+                    callback(JSON.parse(response.responseText));
+                } else {
+                    yadg.failed_callback();
+                }
+            },
             onerror : yadg.failed_callback
         };
         if (method == "POST") {
@@ -515,10 +520,17 @@ var factory = {
         }
     },
 
-    setFormatSelect : function(response_data, data) {
+    setFormatSelect : function(templates) {
         var format_select = document.getElementById("yadg_format");
 
-        factory.setSelect(format_select,response_data);
+        var non_utility = [];
+        for (var i = 0; i < templates.length; i++) {
+            if (!templates[i]['is_utility']) {
+                non_utility.push(templates[i]);
+            }
+        }
+
+        factory.setSelect(format_select, non_utility);
         factory.setDefaultFormat();
 
         if (factory.UPDATE_PROGRESS > 0) {
@@ -539,7 +551,7 @@ var factory = {
             // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on What.cd
             var o = document.createElement("option");
             o.text = data[i]['name'];
-            o.value = data[i]['value'];
+            o.value = data[i]['value'] || data[i]['id'];
             o.selected = data[i]['default'];
             select.options[i] = o;
             if (data[i]['default']) {
@@ -941,6 +953,7 @@ var factory = {
 
 var yadg = {
     yadgHost : "https://localhost:8000",
+    baseURI : "/api/v2/",
 
     standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
     lastStateError : false,
@@ -953,8 +966,6 @@ var yadg = {
     },
 
     init : function() {
-        this.baseURL = this.yadgHost + "/api/v2/";
-        this.baseURLSSL = this.yadgHost + "/api/v2/";
         this.scraperSelect = document.getElementById('yadg_scraper');
         this.formatSelect = document.getElementById('yadg_format');
         this.input = document.getElementById('yadg_input');
@@ -963,10 +974,7 @@ var yadg = {
     },
 
     getBaseURL : function() {
-        if (this.isSSL) {
-            return this.baseURLSSL;
-        }
-        return this.baseURL;
+        return this.yadgHost + this.baseURI;
     },
 
     getScraperList : function(callback) {
@@ -978,9 +986,22 @@ var yadg = {
     },
 
     getFormatsList : function(callback) {
-        var url = this.getBaseURL() + "formats/";
+        var url = this.getBaseURL() + "templates/";
 
-        var request = new requester(url, 'GET', callback);
+        this.getTemplates(url, [], callback);
+    },
+
+    getTemplates : function(url, templates, callback) {
+        var request = new requester(url, 'GET', function(data) {
+            for (var i = 0; i < data.results.length; i++) {
+                templates.push(data.results[i]);
+            }
+            if (data.next !== null) {
+                yadg.getTemplates(data.next, templates, callback);
+            } else {
+                callback(templates);
+            }
+        });
 
         request.send();
     },
