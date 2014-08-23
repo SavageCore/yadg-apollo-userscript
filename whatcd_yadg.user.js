@@ -557,6 +557,9 @@ var factory = {
             if (data[i]['default']) {
                 select.selectedIndex = i;
             }
+            if (data[i]['url']) {
+                o.setAttribute('data-url', data[i]['url']);
+            }
         }
     },
 
