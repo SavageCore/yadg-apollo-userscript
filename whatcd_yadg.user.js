@@ -505,10 +505,10 @@ var factory = {
         }
     },
 
-    setScraperSelect : function(response_data, data) {
+    setScraperSelect : function(scrapers) {
         var scraper_select = document.getElementById("yadg_scraper");
 
-        factory.setSelect(scraper_select,response_data);
+        factory.setSelect(scraper_select, scrapers);
 
         if (factory.UPDATE_PROGRESS > 0) {
             yadg_util.storage.addItem(factory.KEY_SCRAPER_LIST, response_data);
