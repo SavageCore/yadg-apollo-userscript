@@ -290,7 +290,7 @@ var yadg_sandbox = {
                     script = response.responseText;
                     var blob = new Blob([script], {type: 'application/javascript'});
                     var URL = window.webkitURL || window.URL;
-                    var dataURL = URL.createObjectURL(blob);
+                    dataURL = URL.createObjectURL(blob);
                     yadg_sandbox.initCallback(dataURL);
                 } else {
                     yadg_sandbox.initCallbackError();
