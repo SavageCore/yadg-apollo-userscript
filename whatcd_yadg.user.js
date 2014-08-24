@@ -243,10 +243,13 @@ var yadg_util = {
 };
 
 // very simple wrapper for XmlHttpRequest
-function requester(url, method, callback, data) {
-    this.data = {};
+function requester(url, method, callback, data, error_callback) {
+    this.data = data;
     this.url = url;
     this.method = method;
+    if (!error_callback) {
+        error_callback = yadg.failed_callback;
+    }
 
     this.send = function() {
         details = {
@@ -256,17 +259,18 @@ function requester(url, method, callback, data) {
                 if (response.status === 200) {
                     callback(JSON.parse(response.responseText));
                 } else {
-                    yadg.failed_callback();
+                    error_callback();
                 }
             },
-            onerror : yadg.failed_callback
+            onerror : error_callback
         };
         if (method == "POST") {
             details.data = JSON.stringify(this.data);
         }
 
         var headers = {
-            Accept : "application/json"
+            "Accept" : "application/json",
+            "Content-Type" : "application/json"
         };
 
         if (yadg_util.storage.getItem('api_token')) {
@@ -292,20 +296,19 @@ var yadg_sandbox = {
                     var URL = window.webkitURL || window.URL;
                     dataURL = URL.createObjectURL(blob);
                     yadg_sandbox.initCallback(dataURL);
+                    yadg_sandbox.loadSwig(callback);
                 } else {
                     yadg_sandbox.initCallbackError();
                 }
-                callback();
             },
             onerror: function() {
                 yadg_sandbox.initCallbackError();
-                callback();
             }
         });
 
     },
 
-    loadSwig : function() {
+    loadSwig : function(callback) {
         // importScripts for the web worker will not work in Firefox with cross-domain requests
         // see: https://bugzilla.mozilla.org/show_bug.cgi?id=756589
         // so download the Swig files manually with GM_xmlhttpRequest
@@ -322,7 +325,7 @@ var yadg_sandbox = {
                         onload: function(response) {
                             if (response.status === 200) {
                                 yadg_sandbox.swig_custom_script = response.responseText;
-                                yadg_sandbox.initializeSwig({});
+                                callback();
                             }
                         }
                     });
@@ -331,7 +334,7 @@ var yadg_sandbox = {
         });
     },
 
-    initializeSwig : function(templates) {
+    initializeSwig : function(dependencies) {
         if (!(this.swig_script && this.swig_custom_script)) {
             yadg.failed_callback();
             return
@@ -339,7 +342,7 @@ var yadg_sandbox = {
 
         yadg_sandbox.exec({data: this.swig_script, onerror: yadg.failed_callback});
         yadg_sandbox.exec({data: this.swig_custom_script, onerror: yadg.failed_callback});
-        yadg_sandbox.exec({data: "var myswig = new swig.Swig({ loader: swig.loaders.memory(input.templates), autoescape: false }), i=0; yadg_filters.register_filters(myswig);", input: {templates: {}}});
+        yadg_sandbox.exec({data: "var myswig = new swig.Swig({ loader: swig.loaders.memory(input.templates), autoescape: false }), i=0; yadg_filters.register_filters(myswig);", input: {templates: dependencies}});
     },
 
     renderTemplate : function(template, data, callback, error) {
@@ -350,7 +353,6 @@ var yadg_sandbox = {
     initCallback : function(dataUrl) {
         JSandbox.url = dataUrl;
         this.jsandbox = new JSandbox();
-        this.loadSwig();
         this.initError = false;
     },
 
@@ -373,6 +375,7 @@ var yadg_sandbox = {
 
     initCallbackError : function() {
         this.initError = true;
+        alert("Could not load the necessary script files for executing YADG. If this error persists you might need to update the user script.");
     }
 };
 
@@ -435,9 +438,7 @@ var factory = {
 
         // add the appropriate action for the button
         var button = document.getElementById('yadg_submit');
-        button.addEventListener('click',function(e) { e.preventDefault();
-            //yadg.makeRequest();
-            yadg_sandbox.renderTemplate("test {{ i }}", {i: 3}, alert);},false);
+        button.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequest();},false);
 
         // add the action for the options toggle
         var toggleLink = document.getElementById('yadg_toggle_options');
@@ -486,8 +487,12 @@ var factory = {
         }
     },
 
+    getFormatSelect : function() {
+        return document.getElementById('yadg_format');
+    },
+
     setDefaultFormat : function() {
-        var format_select = document.getElementById('yadg_format');
+        var format_select = this.getFormatSelect();
         var format_offsets = yadg_util.getOptionOffsets(format_select);
 
         switch(this.currentLocation) {
@@ -521,17 +526,19 @@ var factory = {
     },
 
     setFormatSelect : function(templates) {
-        var format_select = document.getElementById("yadg_format");
+        var format_select = factory.getFormatSelect();
 
         var non_utility = [];
         for (var i = 0; i < templates.length; i++) {
+            yadg_templates.addTemplate(templates[i]);
+
             if (!templates[i]['is_utility']) {
                 non_utility.push(templates[i]);
             }
         }
 
         factory.setSelect(format_select, non_utility);
-        factory.setDefaultFormat();
+        //factory.setDefaultFormat();
 
         if (factory.UPDATE_PROGRESS > 0) {
             yadg_util.storage.addItem(factory.KEY_FORMAT_LIST, response_data);
@@ -541,6 +548,12 @@ var factory = {
                 yadg_util.storage.addItem(factory.KEY_LAST_CHECKED, new Date());
             }
         }
+
+        // now that we now which template is selected we have to initialize swig with the necessary dependencies
+        var template_id = format_select.options[format_select.selectedIndex].value;
+        yadg_templates.getTemplate(template_id, function(template) {
+            yadg_sandbox.initializeSwig(template.dependencies);
+        });
     },
 
     setSelect : function(select, data) {
@@ -731,10 +744,14 @@ var factory = {
 
                             option_offsets = yadg_util.getOptionOffsets(type_select);
 
-                            if (data.artists[data.artist_keys[i]] == "Remixer") {
-                                type_select.selectedIndex = option_offsets[3];
-                            } else if (data.artists[data.artist_keys[i]] == "Feature") {
+                            // an artist can have multiple types, we only take one of them into account though
+                            // with this priority: Main > Guest > Remixer
+                            if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
+                                type_select.selectedIndex = option_offsets[1];
+                            } else if (data.artists[data.artist_keys[i]].indexOf("guest") != -1) {
                                 type_select.selectedIndex = option_offsets[2];
+                            } else if (data.artists[data.artist_keys[i]].indexOf("remixer") != -1) {
+                                type_select.selectedIndex = option_offsets[3];
                             } else {
                                 type_select.selectedIndex = option_offsets[1];
                             }
@@ -793,10 +810,14 @@ var factory = {
 
                             option_offsets = yadg_util.getOptionOffsets(type_select);
 
-                            if (data.artists[data.artist_keys[i]] == "Remixer") {
-                                type_select.selectedIndex = option_offsets[3];
-                            } else if (data.artists[data.artist_keys[i]] == "Feature") {
+                            // an artist can have multiple types, we only take one of them into account though
+                            // with this priority: Main > Guest > Remixer
+                            if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
+                                type_select.selectedIndex = option_offsets[1];
+                            } else if (data.artists[data.artist_keys[i]].indexOf("guest") != -1) {
                                 type_select.selectedIndex = option_offsets[2];
+                            } else if (data.artists[data.artist_keys[i]].indexOf("remixer") != -1) {
+                                type_select.selectedIndex = option_offsets[3];
                             } else {
                                 type_select.selectedIndex = option_offsets[1];
                             }
@@ -836,10 +857,14 @@ var factory = {
 
                             option_offsets = yadg_util.getOptionOffsets(type_select);
 
-                            if (data.artists[data.artist_keys[i]] == "Remixer") {
-                                type_select.selectedIndex = option_offsets[3];
-                            } else if (data.artists[data.artist_keys[i]] == "Feature") {
+                            // an artist can have multiple types, we only take one of them into account though
+                            // with this priority: Main > Guest > Remixer
+                            if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
+                                type_select.selectedIndex = option_offsets[1];
+                            } else if (data.artists[data.artist_keys[i]].indexOf("guest") != -1) {
                                 type_select.selectedIndex = option_offsets[2];
+                            } else if (data.artists[data.artist_keys[i]].indexOf("remixer") != -1) {
+                                type_select.selectedIndex = option_offsets[3];
                             } else {
                                 type_select.selectedIndex = option_offsets[1];
                             }
@@ -882,7 +907,7 @@ var factory = {
                             var artist_string = "";
 
                             for (var i = 0; i < data.artists_length; i++) {
-                                if (data.artists[data.artist_keys[i]] == "Main") {
+                                if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
                                     if (artist_string != "" && i < data.artists_length - 1) {
                                         artist_string = artist_string + ", ";
                                     } else if (artist_string != "" && i == data.artists_length - 1) {
@@ -926,7 +951,7 @@ var factory = {
                             var artist_string = "";
 
                             for (var i = 0; i < data.artists_length; i++) {
-                                if (data.artists[data.artist_keys[i]] == "Main") {
+                                if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
                                     if (artist_string != "" && i < data.artists_length - 1) {
                                         artist_string = artist_string + ", ";
                                     } else if (artist_string != "" && i == data.artists_length - 1) {
@@ -951,6 +976,42 @@ var factory = {
                 // that should actually never happen
                 return function(data) {};
         }
+    }
+};
+
+var yadg_templates = {
+    _templates : {},
+    _template_urls : {},
+
+    getTemplate : function(id, callback) {
+        if (id in this._templates) {
+            callback(this._templates[id]);
+        } else if (id in this._template_urls) {
+            var request = new requester(this._template_urls[id], 'GET', callback, null, yadg_templates.errorTemplate)
+        } else {
+            this.errorTemplate();
+        }
+    },
+
+    addTemplate : function(template) {
+        this._templates[template.id] = template;
+        this._template_urls[template.id] = template.url;
+    },
+
+    addTemplateUrl : function(id, url) {
+        this._template_urls[id] = url;
+    },
+
+    errorTemplate : function() {
+        yadg.printError("Could not get template. Please choose another one.", true);
+    }
+};
+
+var yadg_renderer = {
+    render : function(template_id, data, callback, error_callback) {
+        yadg_templates.getTemplate(template_id, function(template) {
+            yadg_sandbox.renderTemplate(template.code, data, callback, error_callback);
+        });
     }
 };
 
@@ -1009,35 +1070,39 @@ var yadg = {
         request.send();
     },
 
-    makeRequest : function() {
+    makeRequest : function(params) {
         if (this.isBusy) return;
-        var scraper = this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
-            format = this.formatSelect.options[this.formatSelect.selectedIndex].value,
-            inputValue = this.input.value,
-            url = this.getBaseURL() + 'query/';
 
-        if (inputValue != '') {
+        if (params) {
+            var data = params;
+        } else {
             var data = {
-                input : inputValue,
-                scraper : scraper
+                scraper: this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
+                input: this.input.value
             };
+        }
+            var url = this.getBaseURL() + 'query/';
 
-            var request = new requester(url, 'POST', function(response) {
-                var response_data = JSON.parse(response.responseText);
-                yadg.getResult(response_data.result_url, format);
+        if (data.input !== '') {
+            var request = new requester(url, 'POST', function(result) {
+                yadg.getResult(result.url);
             }, data);
             this.busyStart();
             request.send();
         }
     },
 
-    getResult : function(result_url,format) {
+    getResult : function(result_url) {
         var request = new requester(result_url, 'GET', function(response) {
-            var response = JSON.parse(response.responseText);
-
             if (response.status == "done") {
-                if (response.type == 'release') {
-                    factory.getDescriptionBox().value = response.description;
+                if (response.data.type == 'ReleaseResult') {
+                    var template_id = yadg.formatSelect.options[yadg.formatSelect.selectedIndex].value,
+                        description_box = factory.getDescriptionBox();
+                    yadg_renderer.render(template_id, response, function(out) {
+                        description_box.value = out;
+                    }, function(error) {
+                        description_box.value = error;
+                    });
 
                     if (yadg.lastStateError == true) {
                         yadg.responseDiv.innerHTML = "";
@@ -1045,35 +1110,32 @@ var yadg = {
                     }
 
                     fillFunc = factory.getFormFillFunction();
-                    fillFunc(response.raw_data);
-                } else if (response.type == 'release_list') {
+                    fillFunc(response.data);
+                } else if (response.data.type == 'ListResult') {
                     var ul = document.createElement('ul');
                     ul.id = "yadg_release_list";
 
-                    var scraper_results = response.releases;
-                    for (scraper in scraper_results) {
-                        var release_list = scraper_results[scraper];
-                        for (var i = 0; i < release_list.length;i++) {
-                            var name = release_list[i]['name'],
-                                info = release_list[i]['info'],
-                                query_url = release_list[i]['query_url'],
-                                release_url = release_list[i]['release_url'];
+                    var release_list = response.data.items;
+                    for (var i = 0; i < release_list.length;i++) {
+                        var name = release_list[i]['name'],
+                            info = release_list[i]['info'],
+                            query_params = release_list[i]['query_params'],
+                            release_url = release_list[i]['url'];
 
-                            var li = document.createElement('li'),
-                                a = document.createElement('a');
+                        var li = document.createElement('li'),
+                            a = document.createElement('a');
 
-                            a.textContent = name;
-                            a.setAttribute('data-query-url', query_url);
-                            a.href = release_url;
+                        a.textContent = name;
+                        a.params = query_params;
+                        a.href = release_url;
 
-                            a.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequestByUrl(this.getAttribute('data-query-url'));},false);
+                        a.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequest(this.params);},false);
 
-                            li.appendChild(a);
-                            li.appendChild(document.createElement('br'));
-                            li.appendChild(document.createTextNode(info));
+                        li.appendChild(a);
+                        li.appendChild(document.createElement('br'));
+                        li.appendChild(document.createTextNode(info));
 
-                            ul.appendChild(li);
-                        }
+                        ul.appendChild(li);
                     }
 
                     if (ul.childNodes.length != 0) {
@@ -1092,30 +1154,19 @@ var yadg = {
             } else if (response.status == 'failed') {
                 yadg.failed_callback();
             } else  {
-                var delay = function() { yadg.getResult(data.result_url,data.format); };
+                var delay = function() { yadg.getResult(response.url); };
                 window.setTimeout(delay, 1000);
             }
         });
-        request.data.result_url = result_url;
-        request.data.format = format;
         request.send();
     },
 
-    makeRequestByUrl : function(url) {
-        if (this.isBusy) return;
-        var format = this.formatSelect.options[this.formatSelect.selectedIndex].value;
-
-        var request = new requester(url, function(response_data,data) {
-            yadg.getResult(response_data.result_url,format);
-        });
-        this.busyStart();
-        request.send();
-    },
-
-    printError : function(message) {
+    printError : function(message, template_error) {
         this.responseDiv.innerHTML = "";
         this.responseDiv.appendChild(document.createTextNode(message));
-        this.lastStateError = true;
+        if (!template_error) {
+            this.lastStateError = true;
+        }
     },
 
     failed_callback : function() {
@@ -1154,59 +1205,78 @@ var yadg = {
         result.tags = false;
         result.is_various = false;
 
-        if (rawData.hasOwnProperty('artists')) {
+        if (rawData.artists.length > 0) {
             result.artists = {};
 
-            for (var i in rawData.artists) {
+            for (var i = 0; i < rawData.artists.length; i++) {
                 var artist = rawData.artists[i];
-                if (artist["name"] != "Various") {
-                    result.artists[artist["name"]] = artist["type"];
+                if (!artist["isVarious"]) {
+                    result.artists[artist["name"]] = artist["types"];
                 } else {
                     result.is_various = true;
                 }
             }
         }
-        if (rawData.hasOwnProperty('discs')) {
-            for (var key in rawData.discs) {
-                for (var i in rawData.discs[key]) {
-                    var track = rawData.discs[key][i];
-                    for (var j in track[1]) {
-                        var name = track[1][j]["name"],
-                            type = track[1][j]["type"];
-                        if ( !(name in result.artists) || (type == "Main" && result.artists[name] != "Main") ) {
-                            result.artists[name] = type;
+        if (rawData.discs.length > 0) {
+            for (var k = 0; k < rawData.discs.length; k++) {
+                for (var i = 0; i < rawData.discs[k].length; i++) {
+                    var track = rawData.discs[k][i];
+                    for (var j = 0; j < track["artists"].length; j++) {
+                        var name = track["artists"][j]["name"],
+                            type = track["artists"][j]["types"];
+
+                        var newTypes = null;
+                        if (name in result.artists) {
+                            newTypes = result.artists[name].concat(type)
+                            // deduplicate new types array
+                            for(var i = 0; i < newTypes.length; ++i) {
+                                for(var j = i+1; j < newTypes.length; ++j) {
+                                    if(newTypes[i] === newTypes[j])
+                                        newTypes.splice(j--, 1);
+                                }
+                            }
+                        } else {
+                            newTypes = type;
                         }
+
+                        result.artists[name] = newTypes;
                     }
                 }
             }
         }
-        if (rawData.hasOwnProperty('released')) {
-            result.year = rawData.released.match(/\d{4}/)[0];
+        for (var i = 0; i < rawData['releaseEvents'].length; i++) {
+            var event = rawData['releaseEvents'][i];
+            result.year = event.date.match(/\d{4}/)[0];
             if (result.year.length != 4) {
                 result.year = false;
+            } else {
+                break;
             }
         }
-        if (rawData.hasOwnProperty('title')) {
+        if (rawData.title) {
             result.title = rawData.title;
         }
-        if (rawData.hasOwnProperty('label')) {
-            result.label = rawData.label[0];
+        if (rawData.labelIds.length > 0) {
+            var labelId = rawData['labelIds'][0];
+            if (labelId.label) {
+                result.label = labelId.label;
+            }
+            if (labelId.catalogueNrs.length > 0) {
+                result.catalog = labelId.catalogueNrs[0];
+            }
         }
-        if (rawData.hasOwnProperty('catalog')) {
-            result.catalog = rawData.catalog[0];
+        if (rawData.genres.length > 0) {
+            result.genre = rawData.genres;
         }
-        if (rawData.hasOwnProperty('genre')) {
-            result.genre = rawData.genre;
-        }
-        if (rawData.hasOwnProperty('style')) {
-            result.style = rawData.style;
+        if (rawData.styles.length > 0) {
+            result.style = rawData.styles;
         }
         if (result.genre != false && result.style != false) {
-            result.tags = rawData.genre.concat(rawData.style);
+            result.tags = rawData.genres.concat(rawData.styles);
         } else if (result.genre != false) {
-            result.tags = rawData.genre;
+            result.tags = rawData.genres;
         } else if (result.style != false) {
-            result.tags = rawData.style;
+            result.tags = rawData.styles;
         }
 
         if (result.tags != false) {
