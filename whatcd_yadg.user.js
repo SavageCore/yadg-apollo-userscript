@@ -466,6 +466,16 @@ var factory = {
             });
         }
 
+        // add the action for the template select
+        var formatSelect = this.getFormatSelect();
+        if (formatSelect !== null) {
+            formatSelect.addEventListener('change', function(e) {
+                if (yadg_renderer.hasCached()) {
+                    yadg_renderer.renderCached(this.value, factory.setDescriptionBoxValue, factory.setDescriptionBoxValue);
+                }
+            });
+        }
+
         // add the action to the clear cache link
         var clearCacheLink = document.getElementById('yadg_clear_cache');
         if (clearCacheLink !== null) {
@@ -493,6 +503,14 @@ var factory = {
         } else {
             factory.setScraperSelect(yadg_util.storage.getItem(factory.KEY_SCRAPER_LIST));
             factory.setFormatSelect(yadg_util.storage.getItem(factory.KEY_FORMAT_LIST));
+        }
+    },
+
+    setDescriptionBoxValue : function(value) {
+        var desc_box = factory.getDescriptionBox();
+
+        if (desc_box !== null) {
+            desc_box.value = value;
         }
     },
 
@@ -570,12 +588,6 @@ var factory = {
                 yadg_util.storage.addItem(factory.KEY_LAST_CHECKED, new Date());
             }
         }
-
-        // now that we now which template is selected we have to initialize swig with the necessary dependencies
-        var template_id = format_select.options[format_select.selectedIndex].value;
-        yadg_templates.getTemplate(template_id, function(template) {
-            yadg_sandbox.initializeSwig(template.dependencies);
-        });
     },
 
     setSelect : function(select, data) {
@@ -1009,7 +1021,10 @@ var yadg_templates = {
         if (id in this._templates) {
             callback(this._templates[id]);
         } else if (id in this._template_urls) {
-            var request = new requester(this._template_urls[id], 'GET', callback, null, yadg_templates.errorTemplate);
+            var request = new requester(this._template_urls[id], 'GET', function(template) {
+                yadg_templates.addTemplate(template);
+                callback(template);
+            }, null, yadg_templates.errorTemplate);
             request.send();
         } else {
             this.errorTemplate();
@@ -1030,10 +1045,36 @@ var yadg_templates = {
 };
 
 var yadg_renderer = {
+    _last_data : null,
+    _last_template_id : null,
+
     render : function(template_id, data, callback, error_callback) {
+        this._last_data = data;
+        var new_template = this._last_template_id !== template_id;
+        this._last_template_id = template_id;
+
         yadg_templates.getTemplate(template_id, function(template) {
+            // the new template might have different dependencies, so initialize Swig with those
+            if (new_template) {
+                yadg_sandbox.resetSandbox();
+                yadg_sandbox.initializeSwig(template.dependencies);
+            }
             yadg_sandbox.renderTemplate(template.code, data, callback, error_callback);
         });
+    },
+
+    renderCached : function(template_id, callback, error_callback) {
+        if (this.hasCached()) {
+            this.render(template_id, this._last_data, callback, error_callback);
+        }
+    },
+
+    hasCached : function() {
+        return this._last_data !== null;
+    },
+
+    clearCached : function() {
+        this._last_data = null;
     }
 };
 
@@ -1118,13 +1159,8 @@ var yadg = {
         var request = new requester(result_url, 'GET', function(response) {
             if (response.status == "done") {
                 if (response.data.type == 'ReleaseResult') {
-                    var template_id = yadg.formatSelect.options[yadg.formatSelect.selectedIndex].value,
-                        description_box = factory.getDescriptionBox();
-                    yadg_renderer.render(template_id, response, function(out) {
-                        description_box.value = out;
-                    }, function(error) {
-                        description_box.value = error;
-                    });
+                    var template_id = yadg.formatSelect.options[yadg.formatSelect.selectedIndex].value;
+                    yadg_renderer.render(template_id, response, factory.setDescriptionBoxValue, factory.setDescriptionBoxValue);
 
                     if (yadg.lastStateError == true) {
                         yadg.responseDiv.innerHTML = "";
@@ -1164,6 +1200,9 @@ var yadg = {
                         yadg.responseDiv.innerHTML = "";
                         yadg.responseDiv.appendChild(ul);
                         yadg.lastStateError = false;
+
+                        // we got a ListResult so clear the last ReleaseResult from the render cache
+                        yadg_renderer.clearCached();
                     } else {
                         yadg.printError('Sorry, there were no matches.');
                     }
@@ -1188,6 +1227,10 @@ var yadg = {
         this.responseDiv.appendChild(document.createTextNode(message));
         if (!template_error) {
             this.lastStateError = true;
+
+            // there was a non template related error, so for consistencies sake clear the last ReleaseResult from the
+            // render cache
+            yadg_renderer.clearCached();
         }
     },
 
