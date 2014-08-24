@@ -284,6 +284,9 @@ function requester(url, method, callback, data, error_callback) {
 }
 
 var yadg_sandbox = {
+
+    LAST_WARNING_KEY : "templateLastWarning",
+
     init : function(callback) {
         GM_xmlhttpRequest({
             method: 'GET',
@@ -375,7 +378,13 @@ var yadg_sandbox = {
 
     initCallbackError : function() {
         this.initError = true;
-        alert("Could not load the necessary script files for executing YADG. If this error persists you might need to update the user script.");
+
+        var last_warning = yadg_util.storage.getItem(this.LAST_WARNING_KEY),
+            now = new Date();
+        if (last_warning === null || now.getTime() - (new Date(last_warning)).getTime() > factory.CACHE_TIMEOUT) {
+            alert("Could not load the necessary script files for executing YADG. If this error persists you might need to update the user script. You will only get this message once a day.");
+            yadg_util.storage.addItem(this.LAST_WARNING_KEY, now);
+        }
     }
 };
 
