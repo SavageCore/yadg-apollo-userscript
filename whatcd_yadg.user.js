@@ -16,11 +16,11 @@
 // --------- USER SETTINGS START ---------
 
 /*
- Here you can set site specific default formats.
- You can find a list of available formats at: http://yadg.cc/api/v1/formats/
+ Here you can set site specific default templates.
+ You can find a list of available templates at: http://yadg.cc/api/v2/templates/
 */
-var defaultWhatFormat = "whatcd-tracks-only",
-    defaultWafflesFormat = "wafflesfm";
+var defaultWhatFormat = 5,
+    defaultWafflesFormat = 9;
 
 // --------- USER SETTINGS END ---------
 
@@ -50,11 +50,11 @@ function LocalStorageWrapper (applicationPrefix) {
 
     var isLocalStorageAvailable = function() {
         return typeof(localStorage) != undefined
-    }
+    };
 
     var getKeyPrefix = function() {
         return keyPrefix;
-    }
+    };
 
     //
     // validates if there is a prefix defined for the keys
@@ -74,7 +74,7 @@ function LocalStorageWrapper (applicationPrefix) {
         var checkedKey = typeof(key) === 'string' ? key : JSON.stringify(key);
 
         return checkedKey;
-    }
+    };
 
     //
     // saves the value associated to the key into the localStorage
@@ -90,7 +90,7 @@ function LocalStorageWrapper (applicationPrefix) {
             console.log(error);
             throw error;
         }
-    }
+    };
 
     //
     // gets the value of the object saved to the key passed as parameter
@@ -109,7 +109,7 @@ function LocalStorageWrapper (applicationPrefix) {
             throw error;
         }
         return result;
-    }
+    };
 
     //
     // returns all the keys from the localStorage
@@ -134,7 +134,7 @@ function LocalStorageWrapper (applicationPrefix) {
         }
 
         return results;
-    }
+    };
 
     //
     // removes the value associated to the key from the localStorage
@@ -153,7 +153,7 @@ function LocalStorageWrapper (applicationPrefix) {
             throw error;
         }
         return result;
-    }
+    };
 
     //
     // removes all the values from the localStorage
@@ -173,7 +173,7 @@ function LocalStorageWrapper (applicationPrefix) {
             console.log(error);
             throw error;
         }
-    }
+    };
 
     // make some of the functionalities public
     return {
@@ -185,7 +185,7 @@ function LocalStorageWrapper (applicationPrefix) {
         removeItem : removeItem,
         removeAll : removeAll
     }
-};
+}
 
 // --------- THIRD PARTY CODE AREA END ---------
 
