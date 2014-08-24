@@ -5,7 +5,7 @@
 // @version        0.8.0
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
-// @require        http://localhost:8000/static/js/jsandbox.min.js
+// @require        https://beta.yadg.cc/static/js/jsandbox.min.js
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
 // @include        http*://*what.cd/torrents.php*
@@ -17,7 +17,7 @@
 
 /*
  Here you can set site specific default templates.
- You can find a list of available templates at: http://yadg.cc/api/v2/templates/
+ You can find a list of available templates at: https://beta.yadg.cc/api/v2/templates/
 */
 var defaultWhatFormat = 5,
     defaultWafflesFormat = 9;
@@ -1152,7 +1152,7 @@ var yadg_renderer = {
 };
 
 var yadg = {
-    yadgHost : "https://localhost:8000",
+    yadgHost : "https://beta.yadg.cc",
     baseURI : "/api/v2/",
 
     standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
