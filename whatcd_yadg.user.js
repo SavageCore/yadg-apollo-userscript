@@ -488,8 +488,8 @@ var factory = {
         if (last_checked === null || (new Date()).getTime() - (new Date(last_checked)).getTime() > factory.CACHE_TIMEOUT) {
             // update the scraper and formats list
             factory.UPDATE_PROGRESS = 1;
-            //yadg.getScraperList(factory.setScraperSelect);
-            //yadg.getFormatsList(factory.setFormatSelect);
+            yadg.getScraperList(factory.setScraperSelect);
+            yadg.getFormatsList(factory.setFormatSelect);
         } else {
             factory.setScraperSelect(yadg_util.storage.getItem(factory.KEY_SCRAPER_LIST));
             factory.setFormatSelect(yadg_util.storage.getItem(factory.KEY_FORMAT_LIST));
@@ -525,7 +525,7 @@ var factory = {
         factory.setSelect(scraper_select, scrapers);
 
         if (factory.UPDATE_PROGRESS > 0) {
-            yadg_util.storage.addItem(factory.KEY_SCRAPER_LIST, response_data);
+            yadg_util.storage.addItem(factory.KEY_SCRAPER_LIST, scrapers);
             factory.UPDATE_PROGRESS |= 1<<1;
 
             if (factory.UPDATE_PROGRESS === 7) {
@@ -538,10 +538,23 @@ var factory = {
         var format_select = factory.getFormatSelect();
 
         var non_utility = [];
+        var save_templates = [];
         for (var i = 0; i < templates.length; i++) {
-            yadg_templates.addTemplate(templates[i]);
+            if (factory.UPDATE_PROGRESS > 0) {
+                yadg_templates.addTemplate(templates[i]);
 
-            if (!templates[i]['is_utility']) {
+                save_templates.push({
+                    id : templates[i]['id'],
+                    url : templates[i]['url'],
+                    name : templates[i]['name'],
+                    default : templates[i]['default'],
+                    isUtility : templates[i]['isUtility']
+                });
+            } else {
+                yadg_templates.addTemplateUrl(templates[i]['id'], templates[i]['url']);
+            }
+
+            if (!templates[i]['isUtility']) {
                 non_utility.push(templates[i]);
             }
         }
@@ -550,7 +563,7 @@ var factory = {
         //factory.setDefaultFormat();
 
         if (factory.UPDATE_PROGRESS > 0) {
-            yadg_util.storage.addItem(factory.KEY_FORMAT_LIST, response_data);
+            yadg_util.storage.addItem(factory.KEY_FORMAT_LIST, save_templates);
             factory.UPDATE_PROGRESS |= 1<<2;
 
             if (factory.UPDATE_PROGRESS === 7) {
@@ -996,7 +1009,8 @@ var yadg_templates = {
         if (id in this._templates) {
             callback(this._templates[id]);
         } else if (id in this._template_urls) {
-            var request = new requester(this._template_urls[id], 'GET', callback, null, yadg_templates.errorTemplate)
+            var request = new requester(this._template_urls[id], 'GET', callback, null, yadg_templates.errorTemplate);
+            request.send();
         } else {
             this.errorTemplate();
         }
@@ -1004,7 +1018,6 @@ var yadg_templates = {
 
     addTemplate : function(template) {
         this._templates[template.id] = template;
-        this._template_urls[template.id] = template.url;
     },
 
     addTemplateUrl : function(id, url) {
@@ -1128,7 +1141,7 @@ var yadg = {
                     for (var i = 0; i < release_list.length;i++) {
                         var name = release_list[i]['name'],
                             info = release_list[i]['info'],
-                            query_params = release_list[i]['query_params'],
+                            query_params = release_list[i]['queryParams'],
                             release_url = release_list[i]['url'];
 
                         var li = document.createElement('li'),
