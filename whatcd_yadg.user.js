@@ -535,24 +535,31 @@ var factory = {
         var scraper_select = factory.getScraperSelect(),
             template_select = factory.getFormatSelect(),
             api_token_input = factory.getApiTokenInput();
-        var current_scraper = scraper_select.options[scraper_select.selectedIndex].value,
-            current_template = template_select.options[template_select.selectedIndex].value,
+
+        var current_scraper = null,
+            current_template = null,
             api_token = api_token_input.value.trim();
 
-        if (current_scraper) {
+        if (scraper_select.options.length > 0) {
+            current_scraper = scraper_select.options[scraper_select.selectedIndex].value;
+        }
+
+        if (template_select.options.length > 0) {
+            current_template = template_select.options[template_select.selectedIndex].value;
+        }
+
+        if (current_scraper !== null) {
             yadg_util.settings.addItem(factory.KEY_DEFAULT_SCRAPER, current_scraper);
         }
 
-        if (current_template) {
+        if (current_template !== null) {
             yadg_util.settings.addItem(factory.KEY_DEFAULT_TEMPLATE, current_template);
         }
 
-        if (api_token) {
-            if (api_token !== "") {
-                yadg_util.settings.addItem(factory.KEY_API_TOKEN, api_token);
-            } else {
-                yadg_util.settings.removeItem(factory.KEY_API_TOKEN);
-            }
+        if (api_token !== "") {
+            yadg_util.settings.addItem(factory.KEY_API_TOKEN, api_token);
+        } else {
+            yadg_util.settings.removeItem(factory.KEY_API_TOKEN);
         }
     },
 
@@ -1155,7 +1162,7 @@ var yadg = {
     yadgHost : "https://beta.yadg.cc",
     baseURI : "/api/v2/",
 
-    standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
+    standardError : "Sorry, an error occured. Please try again. If you have set an api token you should check that it is still valid. If this error persists the user script might need updating.",
     lastStateError : false,
 
     isBusy : false,
