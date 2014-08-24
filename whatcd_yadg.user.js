@@ -1359,8 +1359,8 @@ var yadg = {
         }
         if (rawData.discs.length > 0) {
             for (var k = 0; k < rawData.discs.length; k++) {
-                for (var i = 0; i < rawData.discs[k].length; i++) {
-                    var track = rawData.discs[k][i];
+                for (var i = 0; i < rawData.discs[k]["tracks"].length; i++) {
+                    var track = rawData.discs[k]["tracks"][i];
                     for (var j = 0; j < track["artists"].length; j++) {
                         var name = track["artists"][j]["name"],
                             type = track["artists"][j]["types"];
