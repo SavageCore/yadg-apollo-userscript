@@ -432,10 +432,6 @@ var factory = {
         }
     ),
 
-    determineSSL : function(uri) {
-        return uri.indexOf("https://") == 0
-    },
-
     determineLocation : function(uri) {
         for (var i = 0; i < this.locations.length; i++) {
             if (this.locations[i].regex.test(uri)) {
@@ -447,7 +443,6 @@ var factory = {
 
     init : function() {
         this.currentLocation = this.determineLocation(document.URL);
-        this.isSSL = this.determineSSL(document.URL);
         this.insertIntoPage(this.getInputElements());
 
         // set the necessary styles
@@ -510,9 +505,6 @@ var factory = {
                 alert("Cache cleared. Please reload the page for this to take effect.");
             });
         }
-
-        // tell the yadg object if we are browsing the site using ssl
-        yadg.setSSL(this.isSSL);
 
         var last_checked = yadg_util.storage.getItem(factory.KEY_LAST_CHECKED);
         if (last_checked === null || (new Date()).getTime() - (new Date(last_checked)).getTime() > factory.CACHE_TIMEOUT) {
@@ -1166,12 +1158,7 @@ var yadg = {
     standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
     lastStateError : false,
 
-    isSSL : false,
     isBusy : false,
-
-    setSSL : function(isSSL) {
-        this.isSSL = isSSL;
-    },
 
     init : function() {
         this.scraperSelect = document.getElementById('yadg_scraper');
