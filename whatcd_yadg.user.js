@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.8.0
+// @version        0.8.1
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://beta.yadg.cc/static/js/jsandbox.min.js
