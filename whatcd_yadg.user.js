@@ -1359,15 +1359,16 @@ var yadg = {
         }
         if (rawData.discs.length > 0) {
             for (var k = 0; k < rawData.discs.length; k++) {
-                for (var i = 0; i < rawData.discs[k]["tracks"].length; i++) {
-                    var track = rawData.discs[k]["tracks"][i];
-                    for (var j = 0; j < track["artists"].length; j++) {
-                        var name = track["artists"][j]["name"],
-                            type = track["artists"][j]["types"];
+                var disc = rawData.discs[k];
+                for (var l = 0; l < disc["tracks"].length; l++) {
+                    var track = disc["tracks"][l];
+                    for (var m = 0; m < track["artists"].length; m++) {
+                        var name = track["artists"][m]["name"],
+                            type = track["artists"][m]["types"];
 
                         var newTypes = null;
                         if (name in result.artists) {
-                            newTypes = result.artists[name].concat(type)
+                            newTypes = result.artists[name].concat(type);
                             // deduplicate new types array
                             for(var i = 0; i < newTypes.length; ++i) {
                                 for(var j = i+1; j < newTypes.length; ++j) {
