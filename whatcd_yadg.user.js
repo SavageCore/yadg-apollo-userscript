@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        0.8.2
+// @version        0.8.3
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://beta.yadg.cc/static/js/jsandbox.min.js
@@ -1281,7 +1281,7 @@ var yadg = {
                     } else {
                         yadg.printError('Sorry, there were no matches.');
                     }
-                } else if (response.type == 'NotFoundResult') {
+                } else if (response.data.type == 'NotFoundResult') {
                     yadg.printError('I could not find the release with the given ID. You may want to try again with another one.');
                 } else {
                     yadg.printError('Something weird happened. Please try again');
