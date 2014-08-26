@@ -260,6 +260,8 @@ function requester(url, method, callback, data, error_callback) {
             onload : function(response) {
                 if (response.status === 200) {
                     callback(JSON.parse(response.responseText));
+                } else if (response.status === 401) {
+                    yadg.failed_authentication_callback();
                 } else {
                     error_callback();
                 }
@@ -1162,7 +1164,8 @@ var yadg = {
     yadgHost : "https://beta.yadg.cc",
     baseURI : "/api/v2/",
 
-    standardError : "Sorry, an error occured. Please try again. If you have set an api token you should check that it is still valid. If this error persists the user script might need updating.",
+    standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
+    authenticationError : "Your API token is invalid. Please provide a valid API token or remove the current one.",
     lastStateError : false,
 
     isBusy : false,
@@ -1311,6 +1314,11 @@ var yadg = {
 
     failed_callback : function() {
         yadg.printError(yadg.standardError);
+        yadg.busyStop();
+    },
+
+    failed_authentication_callback : function() {
+        yadg.printError(yadg.authenticationError);
         yadg.busyStop();
     },
 
