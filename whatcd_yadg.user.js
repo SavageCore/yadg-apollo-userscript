@@ -5,7 +5,7 @@
 // @version        0.8.4
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
-// @require        https://beta.yadg.cc/static/js/jsandbox.min.js
+// @require        https://yadg.cc/static/js/jsandbox.min.js
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
 // @include        http*://*what.cd/torrents.php*
@@ -17,7 +17,7 @@
 
 /*
  Here you can set site specific default templates.
- You can find a list of available templates at: https://beta.yadg.cc/api/v2/templates/
+ You can find a list of available templates at: https://yadg.cc/api/v2/templates/
 */
 var defaultWhatFormat = 5,
     defaultWafflesFormat = 9;
@@ -720,7 +720,7 @@ var factory = {
     getInputElements : function() {
         var buttonHTML = '<input type="submit" value="Fetch" id="yadg_submit"/>',
             scraperSelectHTML = '<select name="yadg_scraper" id="yadg_scraper"></select>',
-            optionsHTML = '<div id="yadg_options"><div id="yadg_options_template"><label for="yadg_format" id="yadg_format_label">Template:</label><select name="yadg_format" id="yadg_format"></select></div><div id="yadg_options_api_token"><label for="yadg_api_token" id="yadg_api_token_label">API token (<a href="https://beta.yadg.cc/api/token" target="_blank">Get one here</a>):</label> <input type="text" name="yadg_api_token" id="yadg_api_token" size="50" /></div><div id="yadg_options_links"><a id="yadg_save_settings" href="#" title="Save the currently selected scraper and template as default for this site and save the given API token.">Save settings</a> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div></div>',
+            optionsHTML = '<div id="yadg_options"><div id="yadg_options_template"><label for="yadg_format" id="yadg_format_label">Template:</label><select name="yadg_format" id="yadg_format"></select></div><div id="yadg_options_api_token"><label for="yadg_api_token" id="yadg_api_token_label">API token (<a href="https://yadg.cc/api/token" target="_blank">Get one here</a>):</label> <input type="text" name="yadg_api_token" id="yadg_api_token" size="50" /></div><div id="yadg_options_links"><a id="yadg_save_settings" href="#" title="Save the currently selected scraper and template as default for this site and save the given API token.">Save settings</a> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div></div>',
             inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />',
             responseDivHTML = '<div id="yadg_response"></div>',
             toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>',
@@ -1166,7 +1166,7 @@ var yadg_renderer = {
 };
 
 var yadg = {
-    yadgHost : "https://beta.yadg.cc",
+    yadgHost : "https://yadg.cc",
     baseURI : "/api/v2/",
 
     standardError : "Sorry, an error occured. Please try again. If this error persists the user script might need updating.",
