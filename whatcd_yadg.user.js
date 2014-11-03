@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        1.0.0
+// @version        1.1.0
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -421,6 +421,10 @@ var factory = {
             regex : /http(s)?\:\/\/(.*\.)?what\.cd\/requests\.php\?action=new/i
         },
         {
+            name : 'whatcd_request_edit',
+            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/requests\.php\?action=edit&id=.*/i
+        },
+        {
             name : 'whatcd_torrent_overview',
             regex : /http(s)?\:\/\/(.*\.)?what\.cd\/torrents\.php\?id=.*/i
         },
@@ -747,6 +751,7 @@ var factory = {
                 return div;
 
             case "whatcd_request":
+            case "whatcd_request_edit":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
                 tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
@@ -788,6 +793,7 @@ var factory = {
                 break;
 
             case "whatcd_request":
+            case "whatcd_request_edit":
                 var artist_tr = document.getElementById('artist_tr');
                 artist_tr.parentNode.insertBefore(element,artist_tr);
                 break;
@@ -822,6 +828,7 @@ var factory = {
                 return this.dummybox;
 
             case "whatcd_request":
+            case "whatcd_request_edit":
                 return document.getElementsByName('description')[0];
 
             case "waffles_upload":
@@ -952,6 +959,7 @@ var factory = {
                 return f;
 
             case "whatcd_request":
+            case "whatcd_request_edit":
                 var f = function(rawData) {
                     var artist_inputs = document.getElementsByName("artists[]"),
                         album_title_input = document.getElementsByName("title")[0],
