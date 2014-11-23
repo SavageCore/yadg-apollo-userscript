@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        1.1.0
+// @version        1.2.0
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -430,6 +430,10 @@ var factory = {
         },
         {
             name : 'waffles_upload',
+            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php\?legacy=1.*/i
+        },
+        {
+            name : 'waffles_upload_new',
             regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php.*/i
         },
         {
@@ -592,9 +596,7 @@ var factory = {
             // we have no settings so fall back to the hard coded defaults
             switch (this.currentLocation) {
                 case "waffles_upload":
-                    format_select.selectedIndex = format_offsets[defaultWafflesFormat];
-                    break;
-
+                case "waffles_upload_new":
                 case "waffles_request":
                     format_select.selectedIndex = format_offsets[defaultWafflesFormat];
                     break;
@@ -763,6 +765,12 @@ var factory = {
                 tr.innerHTML = '<td class="heading" valign="top" align="right"><label for="yadg_input">YADG:</label></td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
 
+            case "waffles_upload_new":
+                var p = document.createElement('p');
+                p.className = "yadg_p";
+                p.innerHTML = '<label for="yadg_input">YADG:</label>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML;
+                return p;
+
             case "waffles_request":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
@@ -803,6 +811,18 @@ var factory = {
                 submit_button.parentNode.parentNode.parentNode.insertBefore(element,submit_button.parentNode.parentNode);
                 break;
 
+            case "waffles_upload_new":
+                var h4s = document.getElementsByTagName('h4');
+                var div;
+                for (var i=0; i < h4s.length; i++) {
+                    if (h4s[i].innerHTML.indexOf('read the rules') !== -1) {
+                        div = h4s[i].parentNode;
+                        break;
+                    }
+                }
+                div.appendChild(element);
+                break;
+
             case "waffles_request":
                 var category_select = document.getElementsByName('category')[0];
                 category_select.parentNode.parentNode.parentNode.insertBefore(element,category_select.parentNode.parentNode);
@@ -833,6 +853,9 @@ var factory = {
 
             case "waffles_upload":
                 return document.getElementById('descr');
+
+            case "waffles_upload_new":
+                return document.getElementById('id_descr');
 
             case "waffles_request":
                 return document.getElementsByName('information')[0];
@@ -1031,22 +1054,8 @@ var factory = {
                             artist_input.value = "";
                             va_checkbox.checked = true;
                         } else {
+                            artist_input.value = data.flat_artist_string;
                             va_checkbox.checked = false;
-
-                            var artist_string = "";
-
-                            for (var i = 0; i < data.artists_length; i++) {
-                                if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
-                                    if (artist_string != "" && i < data.artists_length - 1) {
-                                        artist_string = artist_string + ", ";
-                                    } else if (artist_string != "" && i == data.artists_length - 1) {
-                                        artist_string = artist_string + " & ";
-                                    }
-                                    artist_string = artist_string + data.artist_keys[i];
-                                }
-                            }
-
-                            artist_input.value = artist_string;
                         }
                     } else {
                         va_checkbox.checked = false;
@@ -1066,6 +1075,44 @@ var factory = {
                 };
                 return f;
 
+            case "waffles_upload_new":
+                var f = function(rawData) {
+                    var artist_input = document.getElementById("id_artist"),
+                        album_title_input = document.getElementById("id_album"),
+                        year_input = document.getElementById("id_year"),
+                        va_checkbox = document.getElementById("id_va"),
+                        tags_input = document.getElementById("id_tags"),
+                        data = yadg.prepareRawResponse(rawData);
+
+                    if (data.artists != false) {
+                        if (data.is_various) {
+                            if (!va_checkbox.checked) {
+                                va_checkbox.click();
+                            }
+                        } else {
+                            if (va_checkbox.checked) {
+                                va_checkbox.click();
+                            }
+                            artist_input.value = data.flat_artist_string;
+                        }
+                    } else {
+                        if (va_checkbox.checked) {
+                            va_checkbox.click();
+                        }
+                        artist_input.value = "";
+                    }
+
+                    yadg_util.setValueIfSet(data.year,year_input,data.year != false);
+                    yadg_util.setValueIfSet(data.title,album_title_input,data.title != false);
+
+                    if (data.tags != false) {
+                        tags_input.value = data.tag_string_nodots.toLowerCase();
+                    } else {
+                        tags_input.value = '';
+                    }
+                };
+                return f;
+
             case "waffles_request":
                 var f = function(rawData) {
                     var artist_input = document.getElementsByName("artist")[0],
@@ -1077,20 +1124,7 @@ var factory = {
                         if (data.is_various) {
                             artist_input.value = "Various Artists";
                         } else {
-                            var artist_string = "";
-
-                            for (var i = 0; i < data.artists_length; i++) {
-                                if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
-                                    if (artist_string != "" && i < data.artists_length - 1) {
-                                        artist_string = artist_string + ", ";
-                                    } else if (artist_string != "" && i == data.artists_length - 1) {
-                                        artist_string = artist_string + " & ";
-                                    }
-                                    artist_string = artist_string + data.artist_keys[i];
-                                }
-                            }
-
-                            artist_input.value = artist_string;
+                            artist_input.value = data.flat_artist_string;
                         }
                     } else {
                         artist_input.value = "";
@@ -1365,6 +1399,7 @@ var yadg = {
         result.style = false;
         result.tags = false;
         result.is_various = false;
+        result.flat_artist_string = false;
 
         if (rawData.artists.length > 0) {
             result.artists = {};
@@ -1470,6 +1505,22 @@ var yadg = {
 
         if (result.artists_length == 0) {
             result.artists = false;
+        } else {
+            // create a flat string of all the main artists
+            var artist_string = "";
+
+            for (var i = 0; i < result.artists_length; i++) {
+                if (result.artists[result.artist_keys[i]].indexOf("main") != -1) {
+                    if (artist_string != "" && i < result.artists_length - 2) {
+                        artist_string = artist_string + ", ";
+                    } else if (artist_string != "" && i < result.artists_length - 1) {
+                        artist_string = artist_string + " & ";
+                    }
+                    artist_string = artist_string + result.artist_keys[i];
+                }
+            }
+
+            result.flat_artist_string = artist_string;
         }
 
         return result;
