@@ -430,10 +430,11 @@ var factory = {
         },
         {
             name : 'waffles_upload',
-            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php\?legacy=1.*/i
-        },
-        {
-            name : 'waffles_upload_new',
+//            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php\?legacy=1.*/i
+//        },
+//        {
+//            TODO: reenable support for the new Waffles upload page once it is reactivated
+//            name : 'waffles_upload_new',
             regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php.*/i
         },
         {
