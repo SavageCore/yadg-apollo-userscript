@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        1.2.0
+// @version        1.2.1
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -430,10 +430,11 @@ var factory = {
         },
         {
             name : 'waffles_upload',
-            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php\?legacy=1.*/i
-        },
-        {
-            name : 'waffles_upload_new',
+//            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php\?legacy=1.*/i
+//        },
+//        {
+//            TODO: reenable support for the new Waffles upload page once it is reactivated
+//            name : 'waffles_upload_new',
             regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php.*/i
         },
         {
