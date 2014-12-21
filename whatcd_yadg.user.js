@@ -2,7 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        1.2.1
+// @version        1.2.2
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -880,32 +880,42 @@ var factory = {
                         data = yadg.prepareRawResponse(rawData);
 
                     if (data.artists != false) {
-                        yadg_util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
+                        var input_idx = 0;
+
+                        yadg_util.addRemoveArtistBoxes(data.effective_artist_count - artist_inputs.length);
 
                         artist_inputs = document.getElementsByName("artists[]");
 
-                        for (var i = 0; i < artist_inputs.length; i++) {
-                            var artist_input = artist_inputs[i],
-                                type_select = artist_input.nextSibling;
+                        for (var i = 0; i < data.artist_keys.length; i++) {
+                            var artist_key = data.artist_keys[i],
+                                artist_types = data.artists[artist_key];
 
-                            while (type_select.tagName != 'SELECT') {
-                                type_select = type_select.nextSibling;
-                            }
+                            for (var j = 0; j < artist_types.length; j++) {
+                                var artist_type = artist_types[j],
+                                    artist_input = artist_inputs[input_idx],
+                                    type_select = artist_input.nextSibling;
 
-                            artist_input.value = data.artist_keys[i];
+                                while (type_select.tagName != 'SELECT') {
+                                    type_select = type_select.nextSibling;
+                                }
 
-                            option_offsets = yadg_util.getOptionOffsets(type_select);
+                                artist_input.value = artist_key;
 
-                            // an artist can have multiple types, we only take one of them into account though
-                            // with this priority: Main > Guest > Remixer
-                            if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
-                                type_select.selectedIndex = option_offsets[1];
-                            } else if (data.artists[data.artist_keys[i]].indexOf("guest") != -1) {
-                                type_select.selectedIndex = option_offsets[2];
-                            } else if (data.artists[data.artist_keys[i]].indexOf("remixer") != -1) {
-                                type_select.selectedIndex = option_offsets[3];
-                            } else {
-                                type_select.selectedIndex = option_offsets[1];
+                                option_offsets = yadg_util.getOptionOffsets(type_select);
+
+                                if (artist_type === "main") {
+                                    type_select.selectedIndex = option_offsets[1];
+                                } else if (artist_type === "guest") {
+                                    type_select.selectedIndex = option_offsets[2];
+                                } else if (artist_type === "remixer") {
+                                    type_select.selectedIndex = option_offsets[3];
+                                } else {
+                                    // we don't know this artist type, default to "main"
+                                    type_select.selectedIndex = option_offsets[1];
+                                }
+
+                                // next artist input
+                                input_idx += 1;
                             }
                         }
                     } else {
@@ -946,32 +956,42 @@ var factory = {
                         data = yadg.prepareRawResponse(rawData);
 
                     if (data.artists != false) {
-                        yadg_util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
+                        var input_idx = 0;
+
+                        yadg_util.addRemoveArtistBoxes(data.effective_artist_count - artist_inputs.length);
 
                         artist_inputs = document.getElementsByName("aliasname[]");
 
-                        for (var i = 0; i < artist_inputs.length; i++) {
-                            var artist_input = artist_inputs[i],
-                                type_select = artist_input.nextSibling;
+                        for (var i = 0; i < data.artist_keys.length; i++) {
+                            var artist_key = data.artist_keys[i],
+                                artist_types = data.artists[artist_key];
 
-                            while (type_select.tagName != 'SELECT') {
-                                type_select = type_select.nextSibling;
-                            }
+                            for (var j = 0; j < artist_types.length; j++) {
+                                var artist_type = artist_types[j],
+                                    artist_input = artist_inputs[input_idx],
+                                    type_select = artist_input.nextSibling;
 
-                            artist_input.value = data.artist_keys[i];
+                                while (type_select.tagName != 'SELECT') {
+                                    type_select = type_select.nextSibling;
+                                }
 
-                            option_offsets = yadg_util.getOptionOffsets(type_select);
+                                artist_input.value = artist_key;
 
-                            // an artist can have multiple types, we only take one of them into account though
-                            // with this priority: Main > Guest > Remixer
-                            if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
-                                type_select.selectedIndex = option_offsets[1];
-                            } else if (data.artists[data.artist_keys[i]].indexOf("guest") != -1) {
-                                type_select.selectedIndex = option_offsets[2];
-                            } else if (data.artists[data.artist_keys[i]].indexOf("remixer") != -1) {
-                                type_select.selectedIndex = option_offsets[3];
-                            } else {
-                                type_select.selectedIndex = option_offsets[1];
+                                option_offsets = yadg_util.getOptionOffsets(type_select);
+
+                                if (artist_type === "main") {
+                                    type_select.selectedIndex = option_offsets[1];
+                                } else if (artist_type === "guest") {
+                                    type_select.selectedIndex = option_offsets[2];
+                                } else if (artist_type === "remixer") {
+                                    type_select.selectedIndex = option_offsets[3];
+                                } else {
+                                    // we don't know this artist type, default to "main"
+                                    type_select.selectedIndex = option_offsets[1];
+                                }
+
+                                // next artist input
+                                input_idx += 1;
                             }
                         }
                     } else {
@@ -994,32 +1014,42 @@ var factory = {
                         data = yadg.prepareRawResponse(rawData);
 
                     if (data.artists != false) {
-                        yadg_util.addRemoveArtistBoxes(data.artists_length - artist_inputs.length);
+                        var input_idx = 0;
+
+                        yadg_util.addRemoveArtistBoxes(data.effective_artist_count - artist_inputs.length);
 
                         artist_inputs = document.getElementsByName("artists[]");
 
-                        for (var i = 0; i < artist_inputs.length; i++) {
-                            var artist_input = artist_inputs[i],
-                                type_select = artist_input.nextSibling;
+                        for (var i = 0; i < data.artist_keys.length; i++) {
+                            var artist_key = data.artist_keys[i],
+                                artist_types = data.artists[artist_key];
 
-                            while (type_select.tagName != 'SELECT') {
-                                type_select = type_select.nextSibling;
-                            }
+                            for (var j = 0; j < artist_types.length; j++) {
+                                var artist_type = artist_types[j],
+                                    artist_input = artist_inputs[input_idx],
+                                    type_select = artist_input.nextSibling;
 
-                            artist_input.value = data.artist_keys[i];
+                                while (type_select.tagName != 'SELECT') {
+                                    type_select = type_select.nextSibling;
+                                }
 
-                            option_offsets = yadg_util.getOptionOffsets(type_select);
+                                artist_input.value = artist_key;
 
-                            // an artist can have multiple types, we only take one of them into account though
-                            // with this priority: Main > Guest > Remixer
-                            if (data.artists[data.artist_keys[i]].indexOf("main") != -1) {
-                                type_select.selectedIndex = option_offsets[1];
-                            } else if (data.artists[data.artist_keys[i]].indexOf("guest") != -1) {
-                                type_select.selectedIndex = option_offsets[2];
-                            } else if (data.artists[data.artist_keys[i]].indexOf("remixer") != -1) {
-                                type_select.selectedIndex = option_offsets[3];
-                            } else {
-                                type_select.selectedIndex = option_offsets[1];
+                                option_offsets = yadg_util.getOptionOffsets(type_select);
+
+                                if (artist_type === "main") {
+                                    type_select.selectedIndex = option_offsets[1];
+                                } else if (artist_type === "guest") {
+                                    type_select.selectedIndex = option_offsets[2];
+                                } else if (artist_type === "remixer") {
+                                    type_select.selectedIndex = option_offsets[3];
+                                } else {
+                                    // we don't know this artist type, default to "main"
+                                    type_select.selectedIndex = option_offsets[1];
+                                }
+
+                                // next artist input
+                                input_idx += 1;
                             }
                         }
                     } else {
@@ -1495,11 +1525,13 @@ var yadg = {
             // count the artists
             result.artists_length = 0;
             result.artist_keys = [];
+            result.effective_artist_count = 0;
 
             for (var i in result.artists) {
                 if (result.artists.hasOwnProperty(i)) {
                     result.artists_length++;
                     result.artist_keys.push(i);
+                    result.effective_artist_count += result.artists[i].length;
                 }
             }
         }
