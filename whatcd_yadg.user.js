@@ -402,6 +402,7 @@ var factory = {
     KEY_API_TOKEN : "apiToken",
     KEY_DEFAULT_TEMPLATE : "defaultTemplate",
     KEY_DEFAULT_SCRAPER : "defaultScraper",
+    KEY_APPEND_DESCRIPTION : "appendDescriptionOn",
 
     CACHE_TIMEOUT : 1000*60*60*24, // 24 hours
 
@@ -533,23 +534,39 @@ var factory = {
         return document.getElementById('yadg_api_token');
     },
 
+    getAppendDescriptionCheckbox : function() {
+        return document.getElementById('yadg_options_append');
+    },
+
+    getAppendDescriptionSettingKey : function() {
+        return this.KEY_APPEND_DESCRIPTION + this.currentLocation.replace("_", "");
+    },
+
     populateSettings : function() {
-        var api_token = yadg_util.settings.getItem(factory.KEY_API_TOKEN);
+        var api_token = yadg_util.settings.getItem(factory.KEY_API_TOKEN),
+            append_desc = yadg_util.settings.getItem(factory.getAppendDescriptionSettingKey());
 
         if (api_token) {
             var api_token_input = factory.getApiTokenInput();
             api_token_input.value = api_token;
+        }
+
+        if (append_desc) {
+            var append_desc_checkbox = factory.getAppendDescriptionCheckbox();
+            append_desc_checkbox.checked = true;
         }
     },
 
     saveSettings : function() {
         var scraper_select = factory.getScraperSelect(),
             template_select = factory.getFormatSelect(),
-            api_token_input = factory.getApiTokenInput();
+            api_token_input = factory.getApiTokenInput(),
+            append_desc_checkbox = factory.getAppendDescriptionCheckbox();
 
         var current_scraper = null,
             current_template = null,
-            api_token = api_token_input.value.trim();
+            api_token = api_token_input.value.trim(),
+            append_description = append_desc_checkbox.checked;
 
         if (scraper_select.options.length > 0) {
             current_scraper = scraper_select.options[scraper_select.selectedIndex].value;
@@ -572,13 +589,30 @@ var factory = {
         } else {
             yadg_util.settings.removeItem(factory.KEY_API_TOKEN);
         }
+
+        var append_desc_setting_key = factory.getAppendDescriptionSettingKey();
+        if (append_description) {
+            yadg_util.settings.addItem(append_desc_setting_key, true);
+        } else {
+            yadg_util.settings.removeItem(append_desc_setting_key);
+        }
     },
 
     setDescriptionBoxValue : function(value) {
-        var desc_box = factory.getDescriptionBox();
+        var desc_box = factory.getDescriptionBox(),
+            append_desc_checkbox = factory.getAppendDescriptionCheckbox(),
+            append_desc = false;
+
+        if (append_desc_checkbox !== null) {
+            append_desc = append_desc_checkbox.checked;
+        }
 
         if (desc_box !== null) {
-            desc_box.value = value;
+            if (append_desc && /\S/.test(desc_box.value)) { // check if the current description contains more than whitespace
+                desc_box.value += "\n\n" + value;
+            } else {
+                desc_box.value = value;
+            }
         }
     },
 
@@ -706,7 +740,7 @@ var factory = {
 
     setStyles : function() {
         // general styles
-        yadg_util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,input#yadg_submit,label#yadg_format_label,a#yadg_scraper_info { margin-right: 5px } div#yadg_response { margin-top:3px; } select#yadg_scraper { margin-right: 2px } #yadg_options_template,#yadg_options_api_token { margin-bottom: 3px; }');
+        yadg_util.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,input#yadg_submit,label#yadg_format_label,a#yadg_scraper_info { margin-right: 5px } div#yadg_response { margin-top:3px; } select#yadg_scraper { margin-right: 2px } #yadg_options_template,#yadg_options_api_token,#yadg_options_append_div { margin-bottom: 3px; }');
 
         // location specific styles will go here
         switch(this.currentLocation) {
@@ -727,7 +761,7 @@ var factory = {
     getInputElements : function() {
         var buttonHTML = '<input type="submit" value="Fetch" id="yadg_submit"/>',
             scraperSelectHTML = '<select name="yadg_scraper" id="yadg_scraper"></select>',
-            optionsHTML = '<div id="yadg_options"><div id="yadg_options_template"><label for="yadg_format" id="yadg_format_label">Template:</label><select name="yadg_format" id="yadg_format"></select></div><div id="yadg_options_api_token"><label for="yadg_api_token" id="yadg_api_token_label">API token (<a href="https://yadg.cc/api/token" target="_blank">Get one here</a>):</label> <input type="text" name="yadg_api_token" id="yadg_api_token" size="50" /></div><div id="yadg_options_links"><a id="yadg_save_settings" href="#" title="Save the currently selected scraper and template as default for this site and save the given API token.">Save settings</a> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div></div>',
+            optionsHTML = '<div id="yadg_options"><div id="yadg_options_template"><label for="yadg_format" id="yadg_format_label">Template:</label><select name="yadg_format" id="yadg_format"></select></div><div id="yadg_options_api_token"><label for="yadg_api_token" id="yadg_api_token_label">API token (<a href="https://yadg.cc/api/token" target="_blank">Get one here</a>):</label> <input type="text" name="yadg_api_token" id="yadg_api_token" size="50" /></div><div id="yadg_options_append_div"><input type="checkbox" name="yadg_options_append" id="yadg_options_append" /> <label for="yadg_options_append" id="yadg_options_append_label">Append descriptions on this page</label></div><div id="yadg_options_links"><a id="yadg_save_settings" href="#" title="Save the currently selected scraper and template as default for this site and save the given API token.">Save settings</a> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div></div>',
             inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />',
             responseDivHTML = '<div id="yadg_response"></div>',
             toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>',
