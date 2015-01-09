@@ -403,6 +403,7 @@ var factory = {
     KEY_DEFAULT_TEMPLATE : "defaultTemplate",
     KEY_DEFAULT_SCRAPER : "defaultScraper",
     KEY_REPLACE_DESCRIPTION : "replaceDescriptionOn",
+    KEY_SETTINGS_INIT_VER : "settingsInitializedVer",
 
     CACHE_TIMEOUT : 1000*60*60*24, // 24 hours
 
@@ -459,6 +460,9 @@ var factory = {
 
         // set the necessary styles
         this.setStyles();
+
+        // make sure we initialize the settings to the most recent version
+        this.initializeSettings();
 
         // populate settings inputs
         this.populateSettings();
@@ -539,7 +543,39 @@ var factory = {
     },
 
     getReplaceDescriptionSettingKey : function() {
-        return this.KEY_REPLACE_DESCRIPTION + this.currentLocation.replace("_", "");
+        return this.makeReplaceDescriptionSettingsKey(this.currentLocation);
+    },
+
+    makeReplaceDescriptionSettingsKey : function(subKey) {
+        return this.KEY_REPLACE_DESCRIPTION + subKey.replace("_", "");
+    },
+
+    initializeSettings : function() {
+        var settings_ver = yadg_util.settings.getItem(factory.KEY_SETTINGS_INIT_VER),
+            current_ver = 1;
+
+        if (!settings_ver) {
+            settings_ver = 0;
+        }
+
+        if (settings_ver < current_ver) {
+            // replace descriptions on upload and new request pages
+            var locations = [
+                'whatcd_upload',
+                'whatcd_request',
+                'waffles_upload',
+                'waffles_upload_new',
+                'waffles_request'
+            ];
+            for (var i = 0; i < locations.length; i++) {
+                var loc = locations[i],
+                    replace_desc_setting_key = factory.makeReplaceDescriptionSettingsKey(loc);
+
+                yadg_util.settings.addItem(replace_desc_setting_key, true);
+            }
+        }
+
+        yadg_util.settings.addItem(factory.KEY_SETTINGS_INIT_VER, current_ver);
     },
 
     populateSettings : function() {
