@@ -547,7 +547,7 @@ var factory = {
     },
 
     makeReplaceDescriptionSettingsKey : function(subKey) {
-        return this.KEY_REPLACE_DESCRIPTION + subKey.replace("_", "");
+        return this.KEY_REPLACE_DESCRIPTION + subKey.replace(/_/g, "");
     },
 
     initializeSettings : function() {
