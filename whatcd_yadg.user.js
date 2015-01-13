@@ -2,6 +2,7 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
+// @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
 // @version        1.3.2
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
