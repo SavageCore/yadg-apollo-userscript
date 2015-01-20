@@ -725,6 +725,7 @@ var factory = {
                     id : templates[i]['id'],
                     url : templates[i]['url'],
                     name : templates[i]['name'],
+                    nameFormatted : templates[i]['nameFormatted'],
                     owner : templates[i]['owner'],
                     default : templates[i]['default'],
                     isUtility : templates[i]['isUtility']
@@ -758,8 +759,8 @@ var factory = {
             // we are not using the javascript constructor to create an Option instance because this will create an
             // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on What.cd
             var o = document.createElement("option");
-            if ('owner' in data[i]) {
-                o.text = data[i]['name'] + " [" + data[i]['owner'] + "]";
+            if ('nameFormatted' in data[i]) {
+                o.text = data[i]['nameFormatted'];
             } else {
                 o.text = data[i]['name'];
             }
