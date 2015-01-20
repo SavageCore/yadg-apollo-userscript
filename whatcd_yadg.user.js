@@ -2,7 +2,8 @@
 // @id             what-yadg
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @version        1.3.2
+// @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
+// @version        1.3.3
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -724,6 +725,7 @@ var factory = {
                     id : templates[i]['id'],
                     url : templates[i]['url'],
                     name : templates[i]['name'],
+                    nameFormatted : templates[i]['nameFormatted'],
                     owner : templates[i]['owner'],
                     default : templates[i]['default'],
                     isUtility : templates[i]['isUtility']
@@ -757,8 +759,8 @@ var factory = {
             // we are not using the javascript constructor to create an Option instance because this will create an
             // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on What.cd
             var o = document.createElement("option");
-            if ('owner' in data[i]) {
-                o.text = data[i]['name'] + " [" + data[i]['owner'] + "]";
+            if ('nameFormatted' in data[i]) {
+                o.text = data[i]['nameFormatted'];
             } else {
                 o.text = data[i]['name'];
             }
