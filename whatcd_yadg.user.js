@@ -3,7 +3,7 @@
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
 // @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
-// @version        1.3.3
+// @version        1.3.4
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -12,6 +12,7 @@
 // @include        http*://*what.cd/torrents.php*
 // @include        http*://*waffles.fm/upload.php*
 // @include        http*://*waffles.fm/requests.php*
+// @run-at         document-start
 // ==/UserScript==
 
 // --------- USER SETTINGS START ---------
@@ -191,6 +192,19 @@ function LocalStorageWrapper (applicationPrefix) {
 // --------- THIRD PARTY CODE AREA END ---------
 
 var yadg_util = {
+    init : function() {
+        // What.cd overwrites window.URL which is somehow visible in Tampermonkey despite activating the sandbox by
+        // using the @grant directive. To circumvent this we run at the document start (see @run-at directive) and save
+        // the reference to window.URL.createObjectURL before it is overwritten
+        this.createObjectURL = undefined;
+        var URL = window.URL || window.webkitURL;
+        if (URL && URL.createObjectURL) {
+            this.createObjectURL = URL.createObjectURL;
+        } else {
+            throw new Error('No no valid implementation of window.URL.createObjectURL found.');
+        }
+    },
+
     exec : function exec(fn) {
         var script = document.createElement('script');
         script.setAttribute("type", "application/javascript");
@@ -301,8 +315,7 @@ var yadg_sandbox = {
                 if (response.status === 200) {
                     script = response.responseText;
                     var blob = new Blob([script], {type: 'application/javascript'});
-                    var URL = window.webkitURL || window.URL;
-                    dataURL = URL.createObjectURL(blob);
+                    dataURL = yadg_util.createObjectURL(blob);
                     yadg_sandbox.initCallback(dataURL);
                     yadg_sandbox.loadSwig(callback);
                 } else {
@@ -452,86 +465,96 @@ var factory = {
                 return this.locations[i].name;
             }
         }
-        return "";
+        return null;
     },
 
     init : function() {
         this.currentLocation = this.determineLocation(document.URL);
-        this.insertIntoPage(this.getInputElements());
+        // only continue with the initialization if we found a valid location
+        if (this.currentLocation !== null) {
+            this.insertIntoPage(this.getInputElements());
 
-        // set the necessary styles
-        this.setStyles();
+            // set the necessary styles
+            this.setStyles();
 
-        // make sure we initialize the settings to the most recent version
-        this.initializeSettings();
+            // make sure we initialize the settings to the most recent version
+            this.initializeSettings();
 
-        // populate settings inputs
-        this.populateSettings();
+            // populate settings inputs
+            this.populateSettings();
 
-        // add the appropriate action for the button
-        var button = document.getElementById('yadg_submit');
-        button.addEventListener('click',function(e) { e.preventDefault(); yadg.makeRequest();},false);
-
-        // add the action for the options toggle
-        var toggleLink = document.getElementById('yadg_toggle_options');
-        if (toggleLink !== null) {
-            toggleLink.addEventListener('click', function(e) {
+            // add the appropriate action for the button
+            var button = document.getElementById('yadg_submit');
+            button.addEventListener('click', function (e) {
                 e.preventDefault();
+                yadg.makeRequest();
+            }, false);
 
-                var optionsDiv = document.getElementById('yadg_options'),
-                    display = optionsDiv.style.display;
+            // add the action for the options toggle
+            var toggleLink = document.getElementById('yadg_toggle_options');
+            if (toggleLink !== null) {
+                toggleLink.addEventListener('click', function (e) {
+                    e.preventDefault();
 
-                if (display == 'none' || display == '') {
-                    optionsDiv.style.display = 'block';
-                } else {
-                    optionsDiv.style.display = 'none';
-                }
-            });
-        }
+                    var optionsDiv = document.getElementById('yadg_options'),
+                        display = optionsDiv.style.display;
 
-        // add the action for the template select
-        var formatSelect = this.getFormatSelect();
-        if (formatSelect !== null) {
-            formatSelect.addEventListener('change', function(e) {
-                if (yadg_renderer.hasCached()) {
-                    yadg_renderer.renderCached(this.value, factory.setDescriptionBoxValue, factory.setDescriptionBoxValue);
-                }
-            });
-        }
+                    if (display == 'none' || display == '') {
+                        optionsDiv.style.display = 'block';
+                    } else {
+                        optionsDiv.style.display = 'none';
+                    }
+                });
+            }
 
-        // add the action to the save settings link
-        var saveSettingsLink = document.getElementById('yadg_save_settings');
-        if (saveSettingsLink !== null) {
-            saveSettingsLink.addEventListener('click', function(e) {
-                e.preventDefault();
+            // add the action for the template select
+            var formatSelect = this.getFormatSelect();
+            if (formatSelect !== null) {
+                formatSelect.addEventListener('change', function (e) {
+                    if (yadg_renderer.hasCached()) {
+                        yadg_renderer.renderCached(this.value, factory.setDescriptionBoxValue, factory.setDescriptionBoxValue);
+                    }
+                });
+            }
 
-                factory.saveSettings();
+            // add the action to the save settings link
+            var saveSettingsLink = document.getElementById('yadg_save_settings');
+            if (saveSettingsLink !== null) {
+                saveSettingsLink.addEventListener('click', function (e) {
+                    e.preventDefault();
 
-                alert("Settings saved successfully.");
-            });
-        }
+                    factory.saveSettings();
 
-        // add the action to the clear cache link
-        var clearCacheLink = document.getElementById('yadg_clear_cache');
-        if (clearCacheLink !== null) {
-            clearCacheLink.addEventListener('click', function(e) {
-                e.preventDefault();
+                    alert("Settings saved successfully.");
+                });
+            }
 
-                yadg_util.storage.removeAll();
+            // add the action to the clear cache link
+            var clearCacheLink = document.getElementById('yadg_clear_cache');
+            if (clearCacheLink !== null) {
+                clearCacheLink.addEventListener('click', function (e) {
+                    e.preventDefault();
 
-                alert("Cache cleared. Please reload the page for this to take effect.");
-            });
-        }
+                    yadg_util.storage.removeAll();
 
-        var last_checked = yadg_util.storage.getItem(factory.KEY_LAST_CHECKED);
-        if (last_checked === null || (new Date()).getTime() - (new Date(last_checked)).getTime() > factory.CACHE_TIMEOUT) {
-            // update the scraper and formats list
-            factory.UPDATE_PROGRESS = 1;
-            yadg.getScraperList(factory.setScraperSelect);
-            yadg.getFormatsList(factory.setFormatSelect);
+                    alert("Cache cleared. Please reload the page for this to take effect.");
+                });
+            }
+
+            var last_checked = yadg_util.storage.getItem(factory.KEY_LAST_CHECKED);
+            if (last_checked === null || (new Date()).getTime() - (new Date(last_checked)).getTime() > factory.CACHE_TIMEOUT) {
+                // update the scraper and formats list
+                factory.UPDATE_PROGRESS = 1;
+                yadg.getScraperList(factory.setScraperSelect);
+                yadg.getFormatsList(factory.setFormatSelect);
+            } else {
+                factory.setScraperSelect(yadg_util.storage.getItem(factory.KEY_SCRAPER_LIST));
+                factory.setFormatSelect(yadg_util.storage.getItem(factory.KEY_FORMAT_LIST));
+            }
+
+            return true;
         } else {
-            factory.setScraperSelect(yadg_util.storage.getItem(factory.KEY_SCRAPER_LIST));
-            factory.setFormatSelect(yadg_util.storage.getItem(factory.KEY_FORMAT_LIST));
+            return false;
         }
     },
 
@@ -1632,7 +1655,15 @@ var yadg = {
     }
 };
 
-yadg_sandbox.init(function() {
-    factory.init();
-    yadg.init();
-});
+yadg_util.init();
+
+// we run the initialization of yadg_util before DOM loading is completed to allow capturing of the original window.URL
+// reference, but additional initialization requires the complete DOM, so only run when the 'DOMContentLoaded' event
+// fires
+window.addEventListener("DOMContentLoaded", function() {
+    yadg_sandbox.init(function() {
+        if (factory.init()) { // returns true if we run on a valid location
+            yadg.init();
+        }
+    });
+}, false);
