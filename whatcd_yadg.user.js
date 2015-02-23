@@ -199,7 +199,7 @@ var yadg_util = {
         this.createObjectURL = undefined;
         var URL = window.URL || window.webkitURL;
         if (URL && URL.createObjectURL) {
-            this.createObjectURL = URL.createObjectURL;
+            this.URL = URL;
         } else {
             throw new Error('No no valid implementation of window.URL.createObjectURL found.');
         }
@@ -315,7 +315,7 @@ var yadg_sandbox = {
                 if (response.status === 200) {
                     script = response.responseText;
                     var blob = new Blob([script], {type: 'application/javascript'});
-                    dataURL = yadg_util.createObjectURL(blob);
+                    dataURL = yadg_util.URL.createObjectURL(blob);
                     yadg_sandbox.initCallback(dataURL);
                     yadg_sandbox.loadSwig(callback);
                 } else {
