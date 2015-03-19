@@ -3,7 +3,7 @@
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
 // @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
-// @version        1.3.4
+// @version        1.3.5
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
@@ -12,7 +12,6 @@
 // @include        http*://*what.cd/torrents.php*
 // @include        http*://*waffles.fm/upload.php*
 // @include        http*://*waffles.fm/requests.php*
-// @run-at         document-start
 // ==/UserScript==
 
 // --------- USER SETTINGS START ---------
@@ -192,19 +191,6 @@ function LocalStorageWrapper (applicationPrefix) {
 // --------- THIRD PARTY CODE AREA END ---------
 
 var yadg_util = {
-    init : function() {
-        // What.cd overwrites window.URL which is somehow visible in Tampermonkey despite activating the sandbox by
-        // using the @grant directive. To circumvent this we run at the document start (see @run-at directive) and save
-        // the reference to window.URL.createObjectURL before it is overwritten
-        this.createObjectURL = undefined;
-        var URL = window.URL || window.webkitURL;
-        if (URL && URL.createObjectURL) {
-            this.createObjectURL = URL.createObjectURL;
-        } else {
-            throw new Error('No no valid implementation of window.URL.createObjectURL found.');
-        }
-    },
-
     exec : function exec(fn) {
         var script = document.createElement('script');
         script.setAttribute("type", "application/javascript");
@@ -315,7 +301,11 @@ var yadg_sandbox = {
                 if (response.status === 200) {
                     script = response.responseText;
                     var blob = new Blob([script], {type: 'application/javascript'});
-                    dataURL = yadg_util.createObjectURL(blob);
+                    var URL = window.URL || window.webkitURL;
+                    if (!URL || !URL.createObjectURL) {
+                        throw new Error('No no valid implementation of window.URL.createObjectURL found.');
+                    }
+                    dataURL = URL.createObjectURL(blob);
                     yadg_sandbox.initCallback(dataURL);
                     yadg_sandbox.loadSwig(callback);
                 } else {
@@ -1569,11 +1559,13 @@ var yadg = {
         }
         for (var i = 0; i < rawData['releaseEvents'].length; i++) {
             var event = rawData['releaseEvents'][i];
-            result.year = event.date.match(/\d{4}/)[0];
-            if (result.year.length != 4) {
-                result.year = false;
-            } else {
-                break;
+            if (event.date) {
+                result.year = event.date.match(/\d{4}/)[0];
+                if (result.year.length != 4) {
+                    result.year = false;
+                } else {
+                    break;
+                }
             }
         }
         if (rawData.title) {
@@ -1655,15 +1647,8 @@ var yadg = {
     }
 };
 
-yadg_util.init();
-
-// we run the initialization of yadg_util before DOM loading is completed to allow capturing of the original window.URL
-// reference, but additional initialization requires the complete DOM, so only run when the 'DOMContentLoaded' event
-// fires
-window.addEventListener("DOMContentLoaded", function() {
-    yadg_sandbox.init(function() {
-        if (factory.init()) { // returns true if we run on a valid location
-            yadg.init();
-        }
-    });
-}, false);
+yadg_sandbox.init(function() {
+    if (factory.init()) { // returns true if we run on a valid location
+        yadg.init();
+    }
+});
