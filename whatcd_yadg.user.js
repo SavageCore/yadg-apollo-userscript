@@ -1559,11 +1559,13 @@ var yadg = {
         }
         for (var i = 0; i < rawData['releaseEvents'].length; i++) {
             var event = rawData['releaseEvents'][i];
-            result.year = event.date.match(/\d{4}/)[0];
-            if (result.year.length != 4) {
-                result.year = false;
-            } else {
-                break;
+            if (event.date) {
+                result.year = event.date.match(/\d{4}/)[0];
+                if (result.year.length != 4) {
+                    result.year = false;
+                } else {
+                    break;
+                }
             }
         }
         if (rawData.title) {
