@@ -255,7 +255,7 @@ function requester(url, method, callback, data, error_callback) {
     }
 
     this.send = function() {
-        details = {
+        var details = {
             url : this.url,
             method : this.method,
             onload : function(response) {
@@ -357,7 +357,7 @@ var yadg_sandbox = {
     },
 
     renderTemplate : function(template, data, callback, error) {
-        eval_string = "myswig.render(input.template, { locals: input.data, filename: 'scratchpad' + (i++) })";
+        var eval_string = "myswig.render(input.template, { locals: input.data, filename: 'scratchpad' + (i++) })";
         this.eval({data: eval_string, callback: function(out) {callback(out);}, input: {template: template, data: data}, onerror: function(err){error(err);}});
     },
 
@@ -986,7 +986,7 @@ var factory = {
 
                                 artist_input.value = artist_key;
 
-                                option_offsets = yadg_util.getOptionOffsets(type_select);
+                                var option_offsets = yadg_util.getOptionOffsets(type_select);
 
                                 if (artist_type === "main") {
                                     type_select.selectedIndex = option_offsets[1];
@@ -1062,7 +1062,7 @@ var factory = {
 
                                 artist_input.value = artist_key;
 
-                                option_offsets = yadg_util.getOptionOffsets(type_select);
+                                var option_offsets = yadg_util.getOptionOffsets(type_select);
 
                                 if (artist_type === "main") {
                                     type_select.selectedIndex = option_offsets[1];
@@ -1120,7 +1120,7 @@ var factory = {
 
                                 artist_input.value = artist_key;
 
-                                option_offsets = yadg_util.getOptionOffsets(type_select);
+                                var option_offsets = yadg_util.getOptionOffsets(type_select);
 
                                 if (artist_type === "main") {
                                     type_select.selectedIndex = option_offsets[1];
@@ -1377,10 +1377,11 @@ var yadg = {
     makeRequest : function(params) {
         if (this.isBusy) return;
 
+        var data;
         if (params) {
-            var data = params;
+            data = params;
         } else {
-            var data = {
+            data = {
                 scraper: this.scraperSelect.options[this.scraperSelect.selectedIndex].value,
                 input: this.input.value
             };
@@ -1408,7 +1409,7 @@ var yadg = {
                         yadg.lastStateError = false;
                     }
 
-                    fillFunc = factory.getFormFillFunction();
+                    var fillFunc = factory.getFormFillFunction();
                     fillFunc(response.data);
                 } else if (response.data.type == 'ListResult') {
                     var ul = document.createElement('ul');
