@@ -3,15 +3,15 @@
 // @name           what.cd - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
 // @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
-// @version        1.3.6
+// @version        1.3.7
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
 // @include        http*://*what.cd/upload.php*
 // @include        http*://*what.cd/requests.php*
 // @include        http*://*what.cd/torrents.php*
-// @include        http*://*waffles.fm/upload.php*
-// @include        http*://*waffles.fm/requests.php*
+// @include        http*://*waffles.ch/upload.php*
+// @include        http*://*waffles.ch/requests.php*
 // ==/UserScript==
 
 // --------- USER SETTINGS START ---------
@@ -436,16 +436,16 @@ var factory = {
         },
         {
             name : 'waffles_upload',
-//            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php\?legacy=1.*/i
+//            regex : /http(s)?\:\/\/(.*\.)?waffles\.ch\/upload\.php\?legacy=1.*/i
 //        },
 //        {
 //            TODO: reenable support for the new Waffles upload page once it is reactivated
 //            name : 'waffles_upload_new',
-            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/upload\.php.*/i
+            regex : /http(s)?\:\/\/(.*\.)?waffles\.ch\/upload\.php.*/i
         },
         {
             name : 'waffles_request',
-            regex : /http(s)?\:\/\/(.*\.)?waffles\.fm\/requests\.php\?do=add/i
+            regex : /http(s)?\:\/\/(.*\.)?waffles\.ch\/requests\.php\?do=add/i
         }
     ),
 
