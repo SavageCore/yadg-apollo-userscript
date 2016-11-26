@@ -1,15 +1,15 @@
 // ==UserScript==
-// @id             what-yadg
-// @name           what.cd - YADG
+// @id             xanax-yadg
+// @name           xanax.rip - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
 // @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
 // @version        1.3.7
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
-// @include        http*://*what.cd/upload.php*
-// @include        http*://*what.cd/requests.php*
-// @include        http*://*what.cd/torrents.php*
+// @include        http*://*xanax.rip/upload.php*
+// @include        http*://*xanax.rip/requests.php*
+// @include        http*://*xanax.rip/torrents.php*
 // @include        http*://*waffles.ch/upload.php*
 // @include        http*://*waffles.ch/requests.php*
 // ==/UserScript==
@@ -20,7 +20,7 @@
  Here you can set site specific default templates.
  You can find a list of available templates at: https://yadg.cc/api/v2/templates/
 */
-var defaultWhatFormat = 5,
+var defaultXanaxFormat = 5,
     defaultWafflesFormat = 9;
 
 // --------- USER SETTINGS END ---------
@@ -415,24 +415,24 @@ var factory = {
 
     locations : new Array(
         {
-            name : 'whatcd_upload',
-            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/upload\.php.*/i
+            name : 'xanax_upload',
+            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/upload\.php.*/i
         },
         {
-            name : 'whatcd_edit',
-            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/torrents\.php\?action=editgroup&groupid=.*/i
+            name : 'xanax_edit',
+            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/torrents\.php\?action=editgroup&groupid=.*/i
         },
         {
-            name : 'whatcd_request',
-            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/requests\.php\?action=new/i
+            name : 'xanax_request',
+            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/requests\.php\?action=new/i
         },
         {
-            name : 'whatcd_request_edit',
-            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/requests\.php\?action=edit&id=.*/i
+            name : 'xanax_request_edit',
+            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/requests\.php\?action=edit&id=.*/i
         },
         {
-            name : 'whatcd_torrent_overview',
-            regex : /http(s)?\:\/\/(.*\.)?what\.cd\/torrents\.php\?id=.*/i
+            name : 'xanax_torrent_overview',
+            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/torrents\.php\?id=.*/i
         },
         {
             name : 'waffles_upload',
@@ -575,8 +575,8 @@ var factory = {
         if (settings_ver < current_ver) {
             // replace descriptions on upload and new request pages
             var locations = [
-                'whatcd_upload',
-                'whatcd_request',
+                'xanax_upload',
+                'xanax_request',
                 'waffles_upload',
                 'waffles_upload_new',
                 'waffles_request'
@@ -687,7 +687,7 @@ var factory = {
                     break;
 
                 default:
-                    format_select.selectedIndex = format_offsets[defaultWhatFormat];
+                    format_select.selectedIndex = format_offsets[defaultXanaxFormat];
                     break;
             }
         }
@@ -770,7 +770,7 @@ var factory = {
 
         for (var i = 0; i < data.length; i++) {
             // we are not using the javascript constructor to create an Option instance because this will create an
-            // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on What.cd
+            // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on xanax.rip
             var o = document.createElement("option");
             if ('nameFormatted' in data[i]) {
                 o.text = data[i]['nameFormatted'];
@@ -820,26 +820,26 @@ var factory = {
 
 
         switch (this.currentLocation) {
-            case "whatcd_upload":
+            case "xanax_upload":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
                 tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
 
-            case "whatcd_edit":
+            case "xanax_edit":
                 var div = document.createElement('div');
                 div.className = "yadg_div";
                 div.innerHTML = '<h3 class="label">YADG</h3>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML;
                 return div;
 
-            case "whatcd_torrent_overview":
+            case "xanax_torrent_overview":
                 var div = document.createElement('div');
                 div.className = "yadg_div";
                 div.innerHTML = '<h3 class="label">YADG</h3>' + '<input type="text" name="yadg_input" id="yadg_input" />' + scraperSelectHTML + scraperInfoLink + buttonHTML + optionsHTML + responseDivHTML;
                 return div;
 
-            case "whatcd_request":
-            case "whatcd_request_edit":
+            case "xanax_request":
+            case "xanax_request_edit":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
                 tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
@@ -871,23 +871,23 @@ var factory = {
 
     insertIntoPage : function(element) {
         switch (this.currentLocation) {
-            case "whatcd_upload":
+            case "xanax_upload":
                 var year_tr = document.getElementById('year_tr');
                 year_tr.parentNode.insertBefore(element,year_tr);
                 break;
 
-            case "whatcd_edit":
+            case "xanax_edit":
                 var summary_input = document.getElementsByName('summary')[0];
                 summary_input.parentNode.insertBefore(element,summary_input.nextSibling.nextSibling);
                 break;
 
-            case "whatcd_torrent_overview":
+            case "xanax_torrent_overview":
                 var add_artists_box = document.getElementsByClassName("box_addartists")[0];
                 add_artists_box.appendChild(element);
                 break;
 
-            case "whatcd_request":
-            case "whatcd_request_edit":
+            case "xanax_request":
+            case "xanax_request_edit":
                 var artist_tr = document.getElementById('artist_tr');
                 artist_tr.parentNode.insertBefore(element,artist_tr);
                 break;
@@ -921,20 +921,20 @@ var factory = {
 
     getDescriptionBox : function() {
         switch (this.currentLocation) {
-            case "whatcd_upload":
+            case "xanax_upload":
                 return document.getElementById('album_desc');
 
-            case "whatcd_edit":
+            case "xanax_edit":
                 return document.getElementsByName('body')[0];
 
-            case "whatcd_torrent_overview":
+            case "xanax_torrent_overview":
                 if (!this.hasOwnProperty("dummybox")) {
                     this.dummybox = document.createElement('div');
                 }
                 return this.dummybox;
 
-            case "whatcd_request":
-            case "whatcd_request_edit":
+            case "xanax_request":
+            case "xanax_request_edit":
                 return document.getElementsByName('description')[0];
 
             case "waffles_upload":
@@ -954,7 +954,7 @@ var factory = {
 
     getFormFillFunction : function() {
         switch (this.currentLocation) {
-            case "whatcd_upload":
+            case "xanax_upload":
                 var f = function(rawData) {
                     var artist_inputs = document.getElementsByName("artists[]"),
                         album_title_input = document.getElementById("title"),
@@ -1022,7 +1022,7 @@ var factory = {
                 };
                 return f;
 
-            case "whatcd_edit":
+            case "xanax_edit":
                 f = function(rawData) {
                     var year_input = document.getElementsByName("year")[0],
                         label_input = document.getElementsByName("record_label")[0],
@@ -1035,7 +1035,7 @@ var factory = {
                 };
                 return f;
 
-            case "whatcd_torrent_overview":
+            case "xanax_torrent_overview":
                 f = function(rawData) {
                     var artist_inputs = document.getElementsByName("aliasname[]"),
                         data = yadg.prepareRawResponse(rawData);
@@ -1087,8 +1087,8 @@ var factory = {
                 };
                 return f;
 
-            case "whatcd_request":
-            case "whatcd_request_edit":
+            case "xanax_request":
+            case "xanax_request_edit":
                 var f = function(rawData) {
                     var artist_inputs = document.getElementsByName("artists[]"),
                         album_title_input = document.getElementsByName("title")[0],
