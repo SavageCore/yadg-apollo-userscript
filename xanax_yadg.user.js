@@ -2,7 +2,7 @@
 // @id             xanax-yadg
 // @name           xanax.rip - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc)
-// @license        https://github.com/Slack06/yadg-userscript/blob/master/LICENSE
+// @license        https://github.com/SavageCore/yadg-xanax-userscript/blob/master/LICENSE
 // @version        1.3.8
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
