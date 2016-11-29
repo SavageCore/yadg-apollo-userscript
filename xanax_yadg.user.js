@@ -12,7 +12,7 @@
 // @include        http*://*xanax.rip/torrents.php*
 // @include        http*://*waffles.ch/upload.php*
 // @include        http*://*waffles.ch/requests.php*
-// @downloadURL    https://github.com/SavageCore/yadg-xanax-userscript/raw/develop/xanax_yadg.user.js
+// @downloadURL    https://github.com/SavageCore/yadg-xanax-userscript/raw/master/xanax_yadg.user.js
 // ==/UserScript==
 
 // --------- USER SETTINGS START ---------
