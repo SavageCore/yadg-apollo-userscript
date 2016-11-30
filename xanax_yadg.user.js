@@ -1,18 +1,18 @@
 // ==UserScript==
-// @id             xanax-yadg
-// @name           xanax.rip - YADG
+// @id             apollo-yadg
+// @name           apollo.rip - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc) - Credit to Slack06
-// @license        https://github.com/SavageCore/yadg-xanax-userscript/blob/master/LICENSE
+// @license        https://github.com/SavageCore/yadg-apollo-userscript/blob/master/LICENSE
 // @version        1.3.9
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
-// @include        http*://*xanax.rip/upload.php*
-// @include        http*://*xanax.rip/requests.php*
-// @include        http*://*xanax.rip/torrents.php*
+// @include        http*://*apollo.rip/upload.php*
+// @include        http*://*apollo.rip/requests.php*
+// @include        http*://*apollo.rip/torrents.php*
 // @include        http*://*waffles.ch/upload.php*
 // @include        http*://*waffles.ch/requests.php*
-// @downloadURL    https://github.com/SavageCore/yadg-xanax-userscript/raw/master/xanax_yadg.user.js
+// @downloadURL    https://github.com/SavageCore/yadg-apollo-userscript/raw/master/apollo.user.js
 // ==/UserScript==
 
 // --------- USER SETTINGS START ---------
@@ -21,7 +21,7 @@
  Here you can set site specific default templates.
  You can find a list of available templates at: https://yadg.cc/api/v2/templates/
 */
-var defaultXanaxFormat = 5,
+var defaultApolloFormat = 5,
     defaultWafflesFormat = 9;
 
 // --------- USER SETTINGS END ---------
@@ -416,24 +416,24 @@ var factory = {
 
     locations : new Array(
         {
-            name : 'xanax_upload',
-            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/upload\.php.*/i
+            name : 'apollo_upload',
+            regex : /http(s)?\:\/\/(.*\.)?apollo\.rip\/upload\.php.*/i
         },
         {
-            name : 'xanax_edit',
-            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/torrents\.php\?action=editgroup&groupid=.*/i
+            name : 'apollo_edit',
+            regex : /http(s)?\:\/\/(.*\.)?apollo\.rip\/torrents\.php\?action=editgroup&groupid=.*/i
         },
         {
-            name : 'xanax_request',
-            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/requests\.php\?action=new/i
+            name : 'apollo_request',
+            regex : /http(s)?\:\/\/(.*\.)?apollo\.rip\/requests\.php\?action=new/i
         },
         {
-            name : 'xanax_request_edit',
-            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/requests\.php\?action=edit&id=.*/i
+            name : 'apollo_request_edit',
+            regex : /http(s)?\:\/\/(.*\.)?apollo\.rip\/requests\.php\?action=edit&id=.*/i
         },
         {
-            name : 'xanax_torrent_overview',
-            regex : /http(s)?\:\/\/(.*\.)?xanax\.rip\/torrents\.php\?id=.*/i
+            name : 'apollo_torrent_overview',
+            regex : /http(s)?\:\/\/(.*\.)?apollo\.rip\/torrents\.php\?id=.*/i
         },
         {
             name : 'waffles_upload',
@@ -576,8 +576,8 @@ var factory = {
         if (settings_ver < current_ver) {
             // replace descriptions on upload and new request pages
             var locations = [
-                'xanax_upload',
-                'xanax_request',
+                'apollo_upload',
+                'apollo_request',
                 'waffles_upload',
                 'waffles_upload_new',
                 'waffles_request'
@@ -688,7 +688,7 @@ var factory = {
                     break;
 
                 default:
-                    format_select.selectedIndex = format_offsets[defaultXanaxFormat];
+                    format_select.selectedIndex = format_offsets[defaultApolloFormat];
                     break;
             }
         }
@@ -821,27 +821,27 @@ var factory = {
 
 
         switch (this.currentLocation) {
-            case "xanax_upload":
+            case "apollo_upload":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
                 tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
                 return tr;
 
-            case "xanax_edit":
+            case "apollo_edit":
                 var div = document.createElement('div');
                 div.className = "yadg_div";
                 div.innerHTML = '<h3 class="label">YADG:</h3>\n' + inputHTML + '\n'  + scraperSelectHTML + '\n'  + scraperInfoLink + '\n'  + buttonHTML + '\n'  + toggleOptionsLinkHTML + '\n'  + optionsHTML + '\n'  + responseDivHTML;
                 return div;
 
-            case "xanax_torrent_overview":
+            case "apollo_torrent_overview":
                 var div = document.createElement('div');
                 div.id = 'yadg_div'
                 div.className = 'box';
                 div.innerHTML = '<div class="head"><strong>YADG</strong></div>\n<div class="body">\n<form class="add_form" name="yadg" method="post">\n<input type="text" name="yadg_input" id="yadg_input" />\n' + scraperSelectHTML + '\n' + scraperInfoLink + '\n' + buttonHTML + '\n' + toggleOptionsLinkHTML + '\n' +  '\n' + optionsHTML + '\n' + responseDivHTML;
                 return div;
 
-            case "xanax_request":
-            case "xanax_request_edit":
+            case "apollo_request":
+            case "apollo_request_edit":
                 var tr = document.createElement('tr');
                 tr.className = "yadg_tr";
                 tr.innerHTML = '<td class="label">YADG:</td><td>' + inputHTML + scraperSelectHTML + scraperInfoLink + buttonHTML + toggleOptionsLinkHTML + optionsHTML + responseDivHTML + '</td>';
@@ -873,23 +873,23 @@ var factory = {
 
     insertIntoPage : function(element) {
         switch (this.currentLocation) {
-            case "xanax_upload":
+            case "apollo_upload":
                 var year_tr = document.getElementById('year_tr');
                 year_tr.parentNode.insertBefore(element,year_tr);
                 break;
 
-            case "xanax_edit":
+            case "apollo_edit":
                 var summary_input = document.getElementsByName('summary')[0];
                 summary_input.parentNode.insertBefore(element,summary_input.nextSibling.nextSibling);
                 break;
 
-            case "xanax_torrent_overview":
+            case "apollo_torrent_overview":
                 var add_artists_box = document.getElementsByClassName("box_addartists")[0];
                 add_artists_box.appendChild(element);
                 break;
 
-            case "xanax_request":
-            case "xanax_request_edit":
+            case "apollo_request":
+            case "apollo_request_edit":
                 var artist_tr = document.getElementById('artist_tr');
                 artist_tr.parentNode.insertBefore(element,artist_tr);
                 break;
@@ -923,20 +923,20 @@ var factory = {
 
     getDescriptionBox : function() {
         switch (this.currentLocation) {
-            case "xanax_upload":
+            case "apollo_upload":
                 return document.getElementById('album_desc');
 
-            case "xanax_edit":
+            case "apollo_edit":
                 return document.getElementsByName('body')[0];
 
-            case "xanax_torrent_overview":
+            case "apollo_torrent_overview":
                 if (!this.hasOwnProperty("dummybox")) {
                     this.dummybox = document.createElement('div');
                 }
                 return this.dummybox;
 
-            case "xanax_request":
-            case "xanax_request_edit":
+            case "apollo_request":
+            case "apollo_request_edit":
                 return document.getElementsByName('description')[0];
 
             case "waffles_upload":
@@ -956,7 +956,7 @@ var factory = {
 
     getFormFillFunction : function() {
         switch (this.currentLocation) {
-            case "xanax_upload":
+            case "apollo_upload":
                 var f = function(rawData) {
                     var artist_inputs = document.getElementsByName("artists[]"),
                         album_title_input = document.getElementById("title"),
@@ -1024,7 +1024,7 @@ var factory = {
                 };
                 return f;
 
-            case "xanax_edit":
+            case "apollo_edit":
                 f = function(rawData) {
                     var year_input = document.getElementsByName("year")[0],
                         label_input = document.getElementsByName("record_label")[0],
@@ -1037,7 +1037,7 @@ var factory = {
                 };
                 return f;
 
-            case "xanax_torrent_overview":
+            case "apollo_torrent_overview":
                 f = function(rawData) {
                     var artist_inputs = document.getElementsByName("aliasname[]"),
                         data = yadg.prepareRawResponse(rawData);
@@ -1089,8 +1089,8 @@ var factory = {
                 };
                 return f;
 
-            case "xanax_request":
-            case "xanax_request_edit":
+            case "apollo_request":
+            case "apollo_request_edit":
                 var f = function(rawData) {
                     var artist_inputs = document.getElementsByName("artists[]"),
                         album_title_input = document.getElementsByName("title")[0],
