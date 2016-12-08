@@ -26,7 +26,7 @@
 */
 var defaultApolloFormat = 5;
 var defaultWafflesFormat = 9;
-var	defaultApolloTarget = 'other';
+var	defaultApolloTarget = 'original';
 var yadg;
 var factory;
 var yadgRenderer;
