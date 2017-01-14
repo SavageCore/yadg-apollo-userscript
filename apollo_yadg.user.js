@@ -17,22 +17,210 @@
 
 // --------- USER SETTINGS START ---------
 
-/*	global window	unsafeWindow document GM_xmlhttpRequest JSandbox formatName AddArtistField RemoveArtistField Blob alert */
+/*	global window	unsafeWindow document GM_xmlhttpRequest JSandbox formatName AddArtistField RemoveArtistField Blob alert $ Image */
 /*	eslint max-depth: ['off'], block-scoped-var: 'off', no-loop-func: 'off', no-alert: 'off' */
 
 /*
  Here you can set site specific default templates.
  You can find a list of available templates at: https://yadg.cc/api/v2/templates/
 */
-var defaultApolloFormat = 5;
+var defaultAPLFormat  = 4;
 var defaultWafflesFormat = 9;
-var	defaultApolloTarget = 'original';
+var	defaultAPLTarget = 'original';
+var defaultAPLDescriptionTarget = 'album';
 var yadg;
 var factory;
 var yadgRenderer;
 var yadgTemplates;
 
 // --------- USER SETTINGS END ---------
+
+function fetchImage(target, callback) {
+	var imgElement = document.getElementById('image');
+	if (imgElement && imgElement.getAttribute('disabled') === 'disabled') {
+		return;
+	}
+	var link;
+	if (target === null) {
+		link = $('#yadg_input').val();
+	}	else {
+		link = target;
+	}
+	switch (true) {
+		case (/discogs/.test(link)):
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				method: 'GET',
+				url: link,
+				onload: function (response) {
+					if (response.status === 200) {
+						var container = document.implementation.createHTMLDocument().documentElement;
+						container.innerHTML = response.responseText;
+						if (typeof callback === 'function') {
+							callback(JSON.parse(container.querySelectorAll('div.image_gallery.image_gallery_large')[0].getAttribute('data-images'))[0].full);
+						}
+					}
+				}
+			});
+			break;
+		case (/itunes/.test(link)):
+			var regex = /id(\d+)/;
+			var id = regex.exec(link)[1];
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				method: 'GET',
+				url: 'https://itunes.apple.com/lookup?id=' + id,
+				onload: function (response) {
+					if (response.status === 200) {
+						var data = JSON.parse(response.responseText);
+						var hires = data.results[0].artworkUrl100.replace('100x100bb', '100000x100000-999');
+						if (typeof callback === 'function') {
+							callback(hires);
+						}
+					}
+				}
+			});
+			break;
+		case (/bandcamp/.test(link)):
+		case (factory.getScraperSelect().value === 'bandcamp'):
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				method: 'GET',
+				url: link,
+				onload: function (response) {
+					if (response.status === 200) {
+						var container = document.implementation.createHTMLDocument().documentElement;
+						container.innerHTML = response.responseText;
+						var scaledImg = container.querySelectorAll('#tralbumArt > a > img')[0].src;
+						var originalImg = scaledImg.replace(/_16/, '_0');
+						var tempImg = new Image();
+						tempImg.src = originalImg;
+						tempImg.onload = function () {
+							if (this.width === this.height) {
+								var img = originalImg;
+							} else {
+								img = scaledImg;
+							}
+							if (typeof callback === 'function') {
+								callback(img);
+							}
+						};
+					}
+				}
+			});
+			break;
+		case (/beatport/.test(link)):
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				method: 'GET',
+				url: link,
+				onload: function (response) {
+					if (response.status === 200) {
+						var container = document.implementation.createHTMLDocument().documentElement;
+						container.innerHTML = response.responseText;
+						if (typeof callback === 'function') {
+							callback(container.querySelectorAll('div.interior-release-chart-artwork-parent > img')[0].src);
+						}
+					}
+				}
+			});
+			break;
+		case (/musicbrainz/.test(link)):
+			var regex = /release\/(.*)/;
+			var id = regex.exec(link)[1];
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				headers: {
+					'User-Agent': 'YADG/1.3.17 (yadg.cc)'
+				},
+				method: 'GET',
+				url: 'http://coverartarchive.org/release/' + id + '/',
+				onload: function (response) {
+					if (response.status === 200) {
+						var data = JSON.parse(response.responseText);
+						if (typeof callback === 'function') {
+							callback(data.images[0].image);
+						}
+					}
+				}
+			});
+			break;
+		case (/junodownload/.test(link)):
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				method: 'GET',
+				url: link,
+				onload: function (response) {
+					if (response.status === 200) {
+						var container = document.implementation.createHTMLDocument().documentElement;
+						container.innerHTML = response.responseText;
+						if (typeof callback === 'function') {
+							callback(container.querySelectorAll('#product_image_front > a')[0].href);
+						}
+					}
+				}
+			});
+			break;
+		case (/metal-archives/.test(link)):
+			GM_xmlhttpRequest({ // eslint-disable-line new-cap
+				method: 'GET',
+				url: link,
+				onload: function (response) {
+					if (response.status === 200) {
+						var container = document.implementation.createHTMLDocument().documentElement;
+						container.innerHTML = response.responseText;
+
+						var parser = document.createElement('a');
+						parser.href = container.querySelectorAll('#cover > img')[0].src;
+						var imgLink = parser.protocol + '//' + parser.hostname + parser.pathname;
+						if (typeof callback === 'function') {
+							callback(imgLink);
+						}
+					}
+				}
+			});
+			break;
+		default:
+			break;
+	}
+}
+
+function pthImgIt() {
+	var pthImgIt = document.getElementById('ptpimg_it_cover');
+
+	switch (window.location.href) {
+		case (window.location.href.match(/\/upload\.php/) || {}).input:
+			var imgElement = document.getElementById('image').value;
+			break;
+		case (window.location.href.match(/torrents\.php\?action=editgroup/) || {}).input:
+			var imgElement = document.querySelectorAll('#content > div > div:nth-child(2) > form > div > input[type="text"]:nth-child(5)')[0].value;
+			break;
+		default:
+			break;
+	}
+
+	if (pthImgIt && imgElement) {
+		pthImgIt.click();
+	}
+}
+
+function insertImage(img, callback) {
+	switch (window.location.href) {
+		case (window.location.href.match(/\/upload\.php/) || {}).input:
+			var input = document.getElementById('image');
+			input.value = img;
+			if (input.getAttribute('autorehost') === 'true') {
+				var evt = document.createEvent('HTMLEvents');
+				evt.initEvent('keyup', false, true);
+				input.dispatchEvent(evt);
+			}
+			input.parentNode.parentNode.insertAdjacentHTML('beforebegin', '<tr id="yadg_image_preview_tr"><td class="label">Album Art Preview:</td><td><img id="yadg_image_preview" src="' + img + '" width="300px" /></tr></td>');
+			callback();
+			break;
+		case (window.location.href.match(/torrents\.php\?action=editgroup/) || {}).input:
+			var imageInputElement = document.querySelectorAll('#content > div > div:nth-child(2) > form > div > input[type="text"]:nth-child(5)')[0];
+			imageInputElement.value = img;
+			imageInputElement.parentNode.insertAdjacentHTML('beforebegin', '<div id="yadg_image_preview_div"><img id="yadg_image_preview" src="' + img + '" width="300px" /></div>');
+			callback();
+			break;
+		default:
+			break;
+	}
+}
 
 // --------- THIRD PARTY CODE AREA START ---------
 
@@ -417,9 +605,13 @@ factory = {
 	KEY_API_TOKEN: 'apiToken',
 	KEY_DEFAULT_TEMPLATE: 'defaultTemplate',
 	KEY_DEFAULT_TARGET: 'defaultTarget',
+	KEY_DESCRIPTION_TARGET: 'descriptionTarget',
 	KEY_DEFAULT_SCRAPER: 'defaultScraper',
 	KEY_REPLACE_DESCRIPTION: 'replaceDescriptionOn',
 	KEY_SETTINGS_INIT_VER: 'settingsInitializedVer',
+	KEY_FETCH_IMAGE: 'fetchImage',
+	KEY_AUTO_PREVIEW: 'autoPreview',
+	KEY_AUTO_REHOST: 'autoRehost',
 
 	CACHE_TIMEOUT: 1000 * 60 * 60 * 24, // 24 hours
 
@@ -486,6 +678,15 @@ factory = {
 		button.addEventListener('click', function (e) {
 			e.preventDefault();
 			yadg.makeRequest();
+			if (factory.getFetchImageCheckbox().checked) {
+				fetchImage(null, function (data) {
+					insertImage(data, function () {
+						if (factory.getAutoRehostCheckbox() && factory.getAutoRehostCheckbox().checked) {
+							pthImgIt();
+						}
+					});
+				});
+			}
 		}, false);
 
   // add the action for the options toggle
@@ -569,6 +770,18 @@ factory = {
 		return document.getElementById('yadg_options_replace');
 	},
 
+	getFetchImageCheckbox: function () {
+		return document.getElementById('yadg_options_image');
+	},
+
+	getAutoRehostCheckbox: function () {
+		return document.getElementById('yadg_options_rehost');
+	},
+
+	getAutoPreviewCheckbox: function () {
+		return document.getElementById('yadg_options_preview');
+	},
+
 	getReplaceDescriptionSettingKey: function () {
 		return this.makeReplaceDescriptionSettingsKey(this.currentLocation);
 	},
@@ -608,6 +821,10 @@ factory = {
 	populateSettings: function () {
 		var apiToken = yadgUtil.settings.getItem(factory.KEY_API_TOKEN);
 		var replaceDesc = yadgUtil.settings.getItem(factory.getReplaceDescriptionSettingKey());
+		var fetchImage = yadgUtil.settings.getItem(factory.KEY_FETCH_IMAGE);
+		var autoRehost = yadgUtil.settings.getItem(factory.KEY_AUTO_REHOST);
+		var autoPreview = yadgUtil.settings.getItem(factory.KEY_AUTO_PREVIEW);
+		var descriptionTarget = yadgUtil.settings.getItem(factory.KEY_AUTO_PREVIEW);
 
 		if (apiToken) {
 			var apiTokenInput = factory.getApiTokenInput();
@@ -618,20 +835,49 @@ factory = {
 			var replaceDescCheckbox = factory.getReplaceDescriptionCheckbox();
 			replaceDescCheckbox.checked = true;
 		}
+
+		if (fetchImage) {
+			var fetchImageCheckbox = factory.getFetchImageCheckbox();
+			fetchImageCheckbox.checked = true;
+		}
+
+		if (autoRehost) {
+			var autoRehostCheckbox = factory.getAutoRehostCheckbox();
+			if (autoRehostCheckbox) {
+				autoRehostCheckbox.checked = true;
+			}
+		}
+
+		if (autoPreview && window.location.href.match(/\/upload\.php/)) {
+			var autoPreviewCheckbox = factory.getAutoPreviewCheckbox();
+			autoPreviewCheckbox.checked = true;
+		}
 	},
 
 	saveSettings: function () {
 		var scraperSelect = factory.getScraperSelect();
 		var templateSelect = factory.getFormatSelect();
 		var targetSelect = factory.getTargetSelect();
+		var descriptionTargetSelect = factory.getDescriptionTargetSelect();
 		var apiTokenInput = factory.getApiTokenInput();
 		var replaceDescCheckbox = factory.getReplaceDescriptionCheckbox();
+		var fetchImageCheckbox = factory.getFetchImageCheckbox();
+		var autoRehostCheckbox = factory.getAutoRehostCheckbox();
+		var autoPreviewCheckbox = factory.getAutoPreviewCheckbox();
 
 		var currentScraper = null;
 		var currentTemplate = null;
 		var currentTarget = null;
+		var currentDescriptionTarget = null;
 		var apiToken = apiTokenInput.value.trim();
 		var replaceDescription = replaceDescCheckbox.checked;
+		var fetchImage = fetchImageCheckbox.checked;
+		if (autoRehostCheckbox) {
+			var autoRehost = autoRehostCheckbox.checked;
+		}
+		if (window.location.href.match(/\/upload\.php/)) {
+			var autoPreview = autoPreviewCheckbox.checked;
+		}
 
 		if (scraperSelect.options.length > 0) {
 			currentScraper = scraperSelect.options[scraperSelect.selectedIndex].value;
@@ -643,6 +889,10 @@ factory = {
 
 		if (targetSelect.options.length > 0) {
 			currentTarget = targetSelect.options[targetSelect.selectedIndex].value;
+		}
+
+		if (descriptionTargetSelect.options.length > 0) {
+			currentDescriptionTarget = descriptionTargetSelect.options[descriptionTargetSelect.selectedIndex].value;
 		}
 
 		if (currentScraper !== null) {
@@ -657,6 +907,10 @@ factory = {
 			yadgUtil.settings.addItem(factory.KEY_DEFAULT_TARGET, currentTarget);
 		}
 
+		if (currentDescriptionTarget !== null) {
+			yadgUtil.settings.addItem(factory.KEY_DESCRIPTION_TARGET, currentDescriptionTarget);
+		}
+
 		if (apiToken === '') {
 			yadgUtil.settings.removeItem(factory.KEY_API_TOKEN);
 		} else {
@@ -669,6 +923,24 @@ factory = {
 		} else {
 			yadgUtil.settings.removeItem(replaceDescSettingKey);
 		}
+
+		if (fetchImage) {
+			yadgUtil.settings.addItem(factory.KEY_FETCH_IMAGE, true);
+		} else {
+			yadgUtil.settings.removeItem(factory.KEY_FETCH_IMAGE);
+		}
+
+		if (autoRehost) {
+			yadgUtil.settings.addItem(factory.KEY_AUTO_REHOST, true);
+		} else if (!autoRehost && autoRehostCheckbox) {
+			yadgUtil.settings.removeItem(factory.KEY_AUTO_REHOST);
+		}
+
+		if (autoPreview) {
+			yadgUtil.settings.addItem(factory.KEY_AUTO_PREVIEW, true);
+		} else if (!autoPreview && window.location.href.match(/\/upload\.php/)) {
+			yadgUtil.settings.removeItem(factory.KEY_AUTO_PREVIEW);
+		}
 	},
 
 	setDescriptionBoxValue: function (value) {
@@ -680,15 +952,25 @@ factory = {
 			replaceDesc = replaceDescCheckbox.checked;
 		}
 
-		if (descBox !== null) {
+		if (descBox !== null && !Array.isArray(descBox)) {
 			if (!replaceDesc && /\S/.test(descBox.value)) { // check if the current description contains more than whitespace
 				descBox.value += '\n\n' + value;
 			} else {
 				descBox.value = value;
 			}
-			var previewBtn = document.getElementsByClassName('button_preview_0')[0];
-			if (previewBtn.value === 'Preview') {
-				previewBtn.click();
+			if (descBox.parentNode.nextSibling.nextSibling) {
+				var previewBtn = descBox.parentNode.nextSibling.nextSibling.firstChild.nextSibling;
+				if (previewBtn && previewBtn.value === 'Preview' && factory.getAutoPreviewCheckbox().checked) {
+					previewBtn.click();
+				}
+			}
+		} else if (Array.isArray(descBox)) {
+			for (var i = 0; i < descBox.length; i++) {
+				descBox[i].value = value;
+				var previewBtn = descBox[i].parentNode.nextSibling.nextSibling.firstChild.nextSibling;
+				if (previewBtn && previewBtn.value === 'Preview' && factory.getAutoPreviewCheckbox().checked) {
+					previewBtn.click();
+				}
 			}
 		}
 	},
@@ -714,7 +996,7 @@ factory = {
 					break;
 
 				default:
-					formatSelect.selectedIndex = formatOffsets[defaultApolloFormat];
+					formatSelect.selectedIndex = formatOffsets[defaultAPLFormat];
 					break;
 			}
 		}
@@ -722,6 +1004,10 @@ factory = {
 
 	getTargetSelect: function () {
 		return document.getElementById('yadg_target');
+	},
+
+	getDescriptionTargetSelect: function () {
+		return document.getElementById('yadg_description_target');
 	},
 
 	setDefaultTarget: function () {
@@ -732,7 +1018,19 @@ factory = {
 		if (defaultTarget !== null && defaultTarget in targetOffsets) {
 			targetSelect.selectedIndex = targetOffsets[defaultTarget];
 		} else {
-			targetSelect.selectedIndex = targetOffsets[defaultApolloTarget];
+			targetSelect.selectedIndex = targetOffsets[defaultAPLTarget];
+		}
+	},
+
+	setDefaultDescriptionTarget: function () {
+		var targetDescriptionSelect = factory.getDescriptionTargetSelect();
+		var targetDescriptionOffsets = yadgUtil.getOptionOffsets(targetDescriptionSelect);
+
+		var defaultDescriptionTarget = yadgUtil.settings.getItem(factory.KEY_DESCRIPTION_TARGET);
+		if (defaultDescriptionTarget !== null && defaultDescriptionTarget in targetDescriptionOffsets) {
+			targetDescriptionSelect.selectedIndex = targetDescriptionOffsets[defaultDescriptionTarget];
+		} else {
+			targetDescriptionSelect.selectedIndex = targetDescriptionOffsets[defaultAPLDescriptionTarget];
 		}
 	},
 
@@ -775,6 +1073,14 @@ factory = {
 		var saveTemplates = [];
 		for (var i = 0; i < templates.length; i++) {
 			if (factory.UPDATE_PROGRESS > 0) {
+				if (templates[i].name === 'What') {
+					templates[i].name = 'Apollo';
+					templates[i].nameFormatted = 'Apollo';
+				} else if (templates[i].name === 'What (Tracks only)') {
+					templates[i].name = 'Apollo (Tracks only)';
+					templates[i].nameFormatted = 'Apollo (Tracks only)';
+				}
+
 				yadgTemplates.addTemplate(templates[i]);
 
 				saveTemplates.push({
@@ -787,6 +1093,14 @@ factory = {
 					isUtility: templates[i].isUtility
 				});
 			} else {
+				if (templates[i].name === 'What') {
+					templates[i].name = 'Apollo';
+					templates[i].nameFormatted = 'Apollo';
+				} else if (templates[i].name === 'What (Tracks only)') {
+					templates[i].name = 'Apollo (Tracks only)';
+					templates[i].nameFormatted = 'Apollo (Tracks only)';
+				}
+
 				yadgTemplates.addTemplateUrl(templates[i].id, templates[i].url);
 			}
 
@@ -798,6 +1112,7 @@ factory = {
 		factory.setSelect(formatSelect, nonUtility);
 		factory.setDefaultFormat();
 		factory.setDefaultTarget();
+		factory.setDefaultDescriptionTarget();
 
 		if (factory.UPDATE_PROGRESS > 0) {
 			yadgUtil.storage.addItem(factory.KEY_FORMAT_LIST, saveTemplates);
@@ -814,7 +1129,7 @@ factory = {
 
 		for (var i = 0; i < data.length; i++) {
    // we are not using the javascript constructor to create an Option instance because this will create an
-   // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on passtheheadphones.me
+   // incompatibility with jQuery in Chrome which will make it impossible to add a new artist field on apollo.rip
 			var o = document.createElement('option');
 			if ('nameFormatted' in data[i]) {
 				o.text = data[i].nameFormatted;
@@ -835,7 +1150,7 @@ factory = {
 
 	setStyles: function () {
   // general styles
-		yadgUtil.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,input#yadg_submit,label#yadg_format_label,a#yadg_scraper_info { margin-right: 5px } div#yadg_response { margin-top:3px; } select#yadg_scraper { margin-right: 2px } #yadg_options_template,#yadg_options_api_token,#yadg_options_replace_div { margin-bottom: 3px; } .add_form[name="yadg"] input,.add_form[name="yadg"] select { width: 90%; margin: 2px 0 !important; }  div.box { border:none !important }');
+		yadgUtil.addCSS('div#yadg_options{ display:none; margin-top:3px; } input#yadg_input,input#yadg_submit,label#yadg_format_label,a#yadg_scraper_info { margin-right: 5px } div#yadg_response { margin-top:3px; } select#yadg_scraper { margin-right: 2px } #yadg_options_template,#yadg_options_api_token,#yadg_options_replace_div { margin-bottom: 3px; } .add_form[name="yadg"] input,.add_form[name="yadg"] select { width: 90%; margin: 2px 0 !important; }');
 
   // location specific styles will go here
 		switch (this.currentLocation) {
@@ -856,7 +1171,14 @@ factory = {
 	getInputElements: function () {
 		var buttonHTML = '<input type="submit" value="Fetch" id="yadg_submit"/>';
 		var scraperSelectHTML = '<select name="yadg_scraper" id="yadg_scraper"></select>';
-		var optionsHTML = '<div id="yadg_options"><div id="yadg_options_template"><label for="yadg_format" id="yadg_format_label">Template:</label><select name="yadg_format" id="yadg_format"></select></div><div id="yadg_options_target"><label for="yadg_target" id="yadg_target_label">Edition:</label><select name="yadg_target" id="yadg_target"><option value="original">Original</option><option value="other">Other</option></select></div><div id="yadg_options_api_token"><label for="yadg_api_token" id="yadg_api_token_label">API token (<a href="https://yadg.cc/api/token" target="_blank">Get one here</a>):</label> <input type="text" name="yadg_api_token" id="yadg_api_token" size="50" /></div><div id="yadg_options_replace_div"><input type="checkbox" name="yadg_options_replace" id="yadg_options_replace" /> <label for="yadg_options_replace" id="yadg_options_replace_label">Replace descriptions on this page</label></div><div id="yadg_options_links"><a id="yadg_save_settings" href="#" title="Save the currently selected scraper and template as default for this site and save the given API token.">Save settings</a> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div></div>';
+		var optionsHTML = '<div id="yadg_options"><div id="yadg_options_template"><label for="yadg_format" id="yadg_format_label">Template:</label><select name="yadg_format" id="yadg_format"></select></div><div id="yadg_options_target"><label for="yadg_target" id="yadg_target_label">Edition:</label><select name="yadg_target" id="yadg_target"><option value="original">Original</option><option value="other">Other</option></select></div><div id="yadg_options_description_target"><label for="yadg_description_target" id="yadg_description_target_label">Description:</label><select name="yadg_description_target" id="yadg_description_target"><option value="album">Album</option><option value="release">Release</option><option value="both">Both</option></select></div><div id="yadg_options_api_token"><label for="yadg_api_token" id="yadg_api_token_label">API token (<a href="https://yadg.cc/api/token" target="_blank">Get one here</a>):</label> <input type="text" name="yadg_api_token" id="yadg_api_token" size="50" /></div><div id="yadg_options_replace_div"><input type="checkbox" name="yadg_options_replace" id="yadg_options_replace" /> <label for="yadg_options_replace" id="yadg_options_replace_label">Replace descriptions on this page</label></div><div id="yadg_options_image_div"><input type="checkbox" name="yadg_options_image" id="yadg_options_image" /> <label for="yadg_options_image" id="yadg_options_image_label">Auto fetch Album Art (Bandcamp, Beatport, Discogs, iTunes, Junodownload, Metal-Archives, MusicBrainz)</label></div>';
+		if (document.getElementById('ptpimg_it_cover')) {
+			optionsHTML += '<div id="yadg_options_rehost_div"><input type="checkbox" name="yadg_options_rehost" id="yadg_options_rehost" /> <label for="yadg_options_rehost" id="yadg_options_rehost_label">Auto rehost with <a href="https://apollo.rip/forums.php?action=viewthread&threadid=4045">[Script] PTPImg It for Apollo</a></label></div>';
+		}
+		if (window.location.href.match(/\/upload\.php/)) {
+			optionsHTML += '<div id="yadg_options_preview_div"><input type="checkbox" name="yadg_options_preview" id="yadg_options_preview" /> <label for="yadg_options_preview" id="yadg_options_preview_label">Auto preview description</label></div>';
+		}
+		optionsHTML += '<div id="yadg_options_links"><a id="yadg_save_settings" href="#" title="Save the currently selected scraper and template as default for this site and save the given API token.">Save settings</a> <span class="yadg_separator">|</span> <a id="yadg_clear_cache" href="#">Clear cache</a></div></div>';
 		var inputHTML = '<input type="text" name="yadg_input" id="yadg_input" size="60" />';
 		var responseDivHTML = '<div id="yadg_response"></div>';
 		var toggleOptionsLinkHTML = '<a id="yadg_toggle_options" href="#">Toggle options</a>';
@@ -927,7 +1249,7 @@ factory = {
 
 			case 'apollo_torrent_overview':
 				var addArtistsBox = document.getElementsByClassName('box_addartists')[0];
-				addArtistsBox.appendChild(element);
+				addArtistsBox.parentNode.insertBefore(element, addArtistsBox.nextSibling.nextSibling);
 				break;
 
 			case 'apollo_request':
@@ -966,7 +1288,14 @@ factory = {
 	getDescriptionBox: function () {
 		switch (this.currentLocation) {
 			case 'apollo_upload':
-				return document.getElementById('album_desc');
+				if (factory.getDescriptionTargetSelect().value === 'album') {
+					return document.getElementById('album_desc');
+				} else if (factory.getDescriptionTargetSelect().value === 'release') {
+					return document.getElementById('release_desc');
+				}	else if (factory.getDescriptionTargetSelect().value === 'both') {
+					return [document.getElementById('album_desc'), document.getElementById('release_desc')];
+				}
+				break;
 
 			case 'apollo_edit':
 				return document.getElementsByName('body')[0];
@@ -1016,77 +1345,122 @@ factory = {
 						labelInput = document.getElementById('record_label');
 						catalogInput = document.getElementById('catalogue_number');
 					}
+
+					if (/itunes/.test(rawData.url)) {
+						var releaseTypeInput = document.getElementById('releasetype');
+						switch (true) {
+							case /.+ - Single$/.test(rawData.title):
+								rawData.title = rawData.title.replace(/ - Single$/, '');
+								if (releaseTypeInput.getAttribute('disabled') !== 'disabled') {
+									releaseTypeInput.value = 9;
+								}
+								break;
+							case /.+ - EP$/.test(rawData.title):
+								rawData.title = rawData.title.replace(/ - EP$/, '');
+								if (releaseTypeInput.getAttribute('disabled') !== 'disabled') {
+									releaseTypeInput.value = 5;
+								}
+								break;
+							default:
+								break;
+						}
+					}
+
 					var artistInputs = document.getElementsByName('artists[]');
 					var tagsInput = document.getElementById('tags');
 					var data = yadg.prepareRawResponse(rawData);
 
-					if (data.artists === false) {
-						for (var i = 0; i < artistInputs.length; i++) {
-							artistInputs[i].value = '';
-						}
-					} else {
-						var inputIdx = 0;
+					if (artistInputs[0].getAttribute('disabled') !== 'disabled') {
+						if (data.artists === false) {
+							for (var i = 0; i < artistInputs.length; i++) {
+								artistInputs[i].value = '';
+							}
+						} else {
+							var inputIdx = 0;
 
-						yadgUtil.addRemoveArtistBoxes(data.effective_artist_count - artistInputs.length);
+							yadgUtil.addRemoveArtistBoxes(data.effective_artist_count - artistInputs.length);
 
-						artistInputs = document.getElementsByName('artists[]');
+							artistInputs = document.getElementsByName('artists[]');
 
-						for (i = 0; i < data.artist_keys.length; i++) {
-							var artistKey = data.artist_keys[i];
-							var artistTypes = data.artists[artistKey];
+							for (i = 0; i < data.artist_keys.length; i++) {
+								var artistKey = data.artist_keys[i];
+								var artistTypes = data.artists[artistKey];
 
-							for (var j = 0; j < artistTypes.length; j++) {
-								var artistType = artistTypes[j];
-								var artistInput = artistInputs[inputIdx];
-								var typeSelect = artistInput.nextSibling;
+								for (var j = 0; j < artistTypes.length; j++) {
+									var artistType = artistTypes[j];
+									var artistInput = artistInputs[inputIdx];
+									var typeSelect = artistInput.nextSibling;
 
-								while (typeSelect.tagName !== 'SELECT') {
-									typeSelect = typeSelect.nextSibling;
-								}
+									while (typeSelect.tagName !== 'SELECT') {
+										typeSelect = typeSelect.nextSibling;
+									}
 
-								artistInput.value = artistKey;
+									artistInput.value = artistKey;
 
-								var optionOffsets = yadgUtil.getOptionOffsets(typeSelect);
+									var optionOffsets = yadgUtil.getOptionOffsets(typeSelect);
 
-								if (artistType === 'main') {
-									typeSelect.selectedIndex = optionOffsets[1];
-								} else if (artistType === 'guest') {
-									typeSelect.selectedIndex = optionOffsets[2];
-								} else if (artistType === 'remixer') {
-									typeSelect.selectedIndex = optionOffsets[3];
-								} else {
+									if (artistType === 'main') {
+										typeSelect.selectedIndex = optionOffsets[1];
+									} else if (artistType === 'guest') {
+										typeSelect.selectedIndex = optionOffsets[2];
+									} else if (artistType === 'remixer') {
+										typeSelect.selectedIndex = optionOffsets[3];
+									} else {
 									// we don't know this artist type, default to "main"
-									typeSelect.selectedIndex = optionOffsets[1];
-								}
+										typeSelect.selectedIndex = optionOffsets[1];
+									}
         // next artist input
-								inputIdx += 1;
+									inputIdx += 1;
+								}
 							}
 						}
 					}
 
-					if (data.tags === false) {
-						tagsInput.value = '';
-					} else {
-						var tagsArray = data.tag_string.split(', ');
-						var tagsUnique = tagsArray.filter(function (elem, index, self) {
-							return index === self.indexOf(elem);
-						});
-						tagsInput.value = tagsUnique.join(',').toLowerCase();
+					if (tagsInput.getAttribute('disabled') !== 'disabled') {
+						if (data.tags === false) {
+							tagsInput.value = '';
+						} else {
+							var tagsArray = data.tag_string.split(', ');
+							var tagsUnique = tagsArray.filter(function (elem, index, self) {
+								return index === self.indexOf(elem);
+							});
+							tagsInput.value = tagsUnique.join(',').toLowerCase();
+						}
 					}
 
-					yadgUtil.setValueIfSet(data.year, yearInput, data.year !== false);
-					yadgUtil.setValueIfSet(data.title, albumTitleInput, data.title !== false);
-					yadgUtil.setValueIfSet(data.label, labelInput, data.label !== false);
-					yadgUtil.setValueIfSet(data.catalog, catalogInput, data.catalog !== false);
+					if (yearInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.year, yearInput, data.year !== false);
+					}
+					if (albumTitleInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.title, albumTitleInput, data.title !== false);
+					}
+					if (labelInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.label, labelInput, data.label !== false);
+					}
+					if (catalogInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.catalog, catalogInput, data.catalog !== false);
+					}
 				};
 				return f;
 
 			case 'apollo_edit':
 				f = function (rawData) {
 					var summaryInput = document.getElementsByName('summary')[0];
-					yadg.prepareRawResponse(rawData);
+					var yearInput = document.getElementsByName('year')[0];
+					var labelInput = document.getElementsByName('record_label')[0];
+					var catalogInput = document.getElementsByName('catalogue_number')[0];
+					var data = yadg.prepareRawResponse(rawData);
 
 					summaryInput.value = 'YADG Update';
+					if (yearInput && yearInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.year, yearInput, data.year !== false);
+					}
+					if (labelInput && labelInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.label, labelInput, data.label !== false);
+					}
+					if (catalogInput && catalogInput.getAttribute('disabled') !== 'disabled') {
+						yadgUtil.setValueIfSet(data.catalog, catalogInput, data.catalog !== false);
+					}
 				};
 				return f;
 
@@ -1355,6 +1729,7 @@ yadgRenderer = {
 				yadgSandbox.resetSandbox();
 				yadgSandbox.initializeSwig(template.dependencies);
 			}
+			template.code = template.code.replace('https://what.cd', 'https://apollo.rip');
 			yadgSandbox.renderTemplate(template.code, data, callback, errorCallback);
 		});
 	},
@@ -1389,6 +1764,7 @@ yadg = {
 		this.formatSelect = document.getElementById('yadg_format');
 		this.input = document.getElementById('yadg_input');
 		this.targetSelect = document.getElementById('yadg_target');
+		this.targetDescriptionSelect = document.getElementById('yadg_description_target');
 		this.responseDiv = document.getElementById('yadg_response');
 		this.button = document.getElementById('yadg_submit');
 	},
@@ -1486,6 +1862,15 @@ yadg = {
 						a.addEventListener('click', function (e) {
 							e.preventDefault();
 							yadg.makeRequest(this.params);
+							if (factory.getFetchImageCheckbox().checked) {
+								fetchImage(this.href, function (data) {
+									insertImage(data, function () {
+										if (factory.getAutoRehostCheckbox() && factory.getAutoRehostCheckbox().checked) {
+											pthImgIt();
+										}
+									});
+								});
+							}
 						}, false);
 
 						li.appendChild(a);
