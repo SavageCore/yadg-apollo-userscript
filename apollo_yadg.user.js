@@ -24,7 +24,7 @@
  Here you can set site specific default templates.
  You can find a list of available templates at: https://yadg.cc/api/v2/templates/
 */
-var defaultAPLFormat  = 4;
+var defaultAPLFormat = 4;
 var defaultWafflesFormat = 9;
 var	defaultAPLTarget = 'original';
 var defaultAPLDescriptionTarget = 'album';
