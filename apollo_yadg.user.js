@@ -14,7 +14,7 @@
 // @include        http*://*apollo.rip/torrents.php*
 // @include        http*://*waffles.ch/upload.php*
 // @include        http*://*waffles.ch/requests.php*
-// @downloadURL    https://github.com/SavageCore/yadg-apollo-userscript/raw/master/apollo.user.js
+// @downloadURL    https://github.com/SavageCore/yadg-apollo-userscript/raw/master/apollo_yadg.user.js
 // ==/UserScript==
 
 // --------- USER SETTINGS START ---------
