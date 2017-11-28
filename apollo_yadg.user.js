@@ -5,7 +5,7 @@
 // @license        https://github.com/SavageCore/yadg-apollo-userscript/blob/master/LICENSE
 // @version        1.3.17
 // @namespace      yadg
-// @grant          GM.xmlHttpRequest
+// @grant          GM_xmlhttpRequest
 // @grant          GM.xmlHttpRequest
 // @require        https://yadg.cc/static/js/jsandbox.min.js
 // @require        https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
