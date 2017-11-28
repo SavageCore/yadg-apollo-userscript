@@ -3,7 +3,7 @@
 // @name           apollo.rip - YADG
 // @description    This script provides integration with online description generator YADG (http://yadg.cc) - Credit to Slack06
 // @license        https://github.com/SavageCore/yadg-apollo-userscript/blob/master/LICENSE
-// @version        1.3.15
+// @version        1.3.16
 // @namespace      yadg
 // @grant          GM.xmlHttpRequest
 // @grant          GM.xmlHttpRequest
