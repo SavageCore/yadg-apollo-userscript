@@ -7,8 +7,8 @@
 // @namespace      yadg
 // @grant          GM_xmlhttpRequest
 // @grant          GM.xmlHttpRequest
-// @require        https://yadg.cc/static/js/jsandbox.min.js
 // @require        https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
+// @require        https://yadg.cc/static/js/jsandbox.min.js
 // @include        http*://*apollo.rip/upload.php*
 // @include        http*://*apollo.rip/requests.php*
 // @include        http*://*apollo.rip/torrents.php*
