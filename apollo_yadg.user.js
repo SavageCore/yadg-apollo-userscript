@@ -74,7 +74,7 @@ function fetchImage(target, callback) {
 			}
 			GM.xmlHttpRequest({ // eslint-disable-line new-cap
 				method: 'GET',
-				url: 'https://itunes.apple.com/lookup?id=' + id,
+				url: 'https://itunes.apple.com/lookup?id=' + id + '&country=' + country,
 				onload: function (response) {
 					if (response.status === 200) {
 						var data = JSON.parse(response.responseText);
